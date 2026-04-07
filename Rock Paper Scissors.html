@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)file:///C:/void-drifter/rock-paper-scissors.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock Paper Scissors</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --accent: #00d4ff;
+      --accent-hover: #00b8e6;
+      --text: #fff;
+      --text-muted: #888;
+      --danger: #e94560;
+      --chip-gold: #ffd700;
+      --choice-size: 100px;
+      --choice-font: 3rem;
+      --border-radius: 10px;
+      --btn-radius: 5px;
+      --box-bg: rgba(255,255,255,0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text);
+      transition: background 0.3s;
+    }
+    body.light { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #333; }
+    body.light .score-box, body.light .choice, body.light .bet-input, body.light .diff-btn:not(.active), body.light .bet-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.2); }
+    body.light h1 { color: #333; text-shadow: none; }
+    body.light .chips-display { color: #b8860b; }
+    body.light .diff-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    body.light .result { color: #333; }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 20px rgba(255,255,255,0.3); transition: all 0.3s; }
+    .achievement {
+      background: linear-gradient(90deg, #ffd700, #ff8c00);
+      color: #000;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+      animation: achievementPop 0.5s ease-out;
+    }
+    @keyframes achievementPop {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; justify-content: center; }
+    .chips-display { font-size: 1.5rem; color: var(--chip-gold); }
+    .chips-display span { font-weight: bold; font-size: 1.8rem; }
+    .bot-chips { font-size: 1rem; color: var(--danger); }
+    .bot-chips span { font-weight: bold; }
+    .add-chips { position: relative; display: inline-block; }
+    .add-chips-btn {
+      padding: 0.5rem 1rem;
+      background: var(--chip-gold);
+      color: #333;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .add-chips-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.5rem;
+      background: #2a2a4a;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--btn-radius);
+      padding: 0.5rem;
+      display: none;
+      z-index: 100;
+      min-width: 200px;
+    }
+    body.light .add-chips-dropdown { background: #fff; border-color: rgba(0,0,0,0.2); }
+    .add-chips-dropdown.show { display: block; }
+    .add-chips-dropdown input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 3px;
+      color: #fff;
+    }
+    body.light .add-chips-dropdown input { background: rgba(0,0,0,0.05); color: #333; }
+    .add-chips-dropdown button {
+      width: 100%;
+      padding: 0.5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .settings-btn {
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+    }
+    .difficulty {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .diff-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      background: var(--box-bg);
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .diff-btn.active { background: var(--accent); color: var(--bg-primary); border-color: var(--accent); }
+    .diff-btn:hover:not(.active) { background: rgba(255,255,255,0.2); }
+    .bet-section {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .bet-section label { font-size: 1rem; }
+    .bet-input {
+      width: 100px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      background: var(--box-bg);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: var(--btn-radius);
+      color: var(--text);
+      text-align: center;
+    }
+    .bet-buttons { display: flex; gap: 0.3rem; }
+    .bet-btn {
+      padding: 0.4rem 0.7rem;
+      font-size: 0.8rem;
+      background: var(--box-bg);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .bet-btn:hover { background: rgba(255,255,255,0.2); }
+    .score-board {
+      display: flex;
+      gap: 3rem;
+      margin-bottom: 2rem;
+      font-size: 1.2rem;
+    }
+    .score-box {
+      text-align: center;
+      padding: 1rem 2rem;
+      background: var(--box-bg);
+      border-radius: var(--border-radius);
+    }
+    .score-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--accent); }
+    .choices { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+    .choice {
+      width: var(--choice-size);
+      height: var(--choice-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--choice-font);
+      background: var(--box-bg);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .choice:hover { transform: scale(1.1); background: rgba(255,255,255,0.2); }
+    .choice:disabled { opacity: 0.3; cursor: not-allowed; }
+    .result { font-size: 1.5rem; min-height: 2rem; margin-bottom: 0.5rem; transition: all 0.3s; }
+    .taunt { font-size: 1rem; color: var(--danger); min-height: 1.2rem; margin-bottom: 0.5rem; font-style: italic; }
+    .pattern-detected { font-size: 0.85rem; color: var(--danger); min-height: 1.2rem; margin-bottom: 0.5rem; }
+    .history { font-size: 0.9rem; color: var(--text-muted); }
+    .game-over {
+      font-size: 1.2rem;
+      color: var(--danger);
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .victory {
+      font-size: 2rem;
+      color: var(--chip-gold);
+      margin-bottom: 1rem;
+      display: none;
+      text-align: center;
+      animation: victoryGlow 1s infinite alternate;
+    }
+    @keyframes victoryGlow {
+      from { text-shadow: 0 0 10px var(--chip-gold); }
+      to { text-shadow: 0 0 30px var(--chip-gold), 0 0 50px orange; }
+    }
+    button.action-btn {
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      background: var(--danger);
+      color: var(--text);
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 1rem;
+    }
+    button.action-btn:hover { background: #ff6b6b; }
+    button.action-btn:disabled { background: #555; cursor: not-allowed; }
+
+    .settings-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .settings-modal.show { display: flex; }
+    .settings-content {
+      background: #2a2a4a;
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      max-width: 400px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    body.light .settings-content { background: #fff; }
+    .settings-content h2 { margin-bottom: 1rem; }
+    .settings-group { margin-bottom: 1.5rem; }
+    .settings-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+    .settings-group input[type="color"] {
+      width: 100%;
+      height: 40px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .settings-group select, .settings-group input[type="range"] {
+      width: 100%;
+      padding: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 5px;
+      color: #fff;
+    }
+    body.light .settings-group select, body.light .settings-group input[type="range"] { background: rgba(0,0,0,0.05); color: #333; }
+    .settings-close {
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      float: right;
+    }
+
+    .cheat-menu {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2a2a4a;
+      border: 2px solid #ff0000;
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      display: none;
+      z-index: 2000;
+      min-width: 320px;
+    }
+    .cheat-menu.show { display: block; }
+    body.light .cheat-menu { background: #fff; border-color: #ff0000; }
+    .cheat-menu h2 {
+      color: #ff0000;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .cheat-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 5px;
+    }
+    .cheat-toggle label { cursor: pointer; flex: 1; }
+    .cheat-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #ff0000;
+      cursor: pointer;
+    }
+    .cheat-hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+    }
+    .future-vision {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,0,0,0.9);
+      padding: 0.3rem 0.8rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      display: none;
+    }
+    .future-vision.show { display: block; }
+  </style>
+</head>
+<body>
+  <h1>Rock Paper Scissors</h1>
+  <div class="achievement" id="achievement">🏆 ACHIEVEMENT UNLOCKED: BANKRUPTCY MASTER!</div>
+  
+  <div class="header-row">
+    <div class="chips-display">You: <span id="chips">2000</span></div>
+    <div class="add-chips">
+      <button class="add-chips-btn" onclick="toggleAddChips()">+ Add</button>
+      <div class="add-chips-dropdown" id="add-chips-dropdown">
+        <input type="number" id="custom-chip-amount" placeholder="Enter amount">
+        <button onclick="addCustomChips()">Add</button>
+      </div>
+    </div>
+    <div class="bot-chips">Bot: <span id="bot-chips">2,500,000</span></div>
+    <button class="settings-btn" onclick="openSettings()">⚙️</button>
+  </div>
+  
+  <div class="difficulty">
+    <button class="diff-btn active" data-diff="easy">Easy</button>
+    <button class="diff-btn" data-diff="medium">Medium</button>
+    <button class="diff-btn" data-diff="hard">Hard</button>
+    <button class="diff-btn" data-diff="extreme">Extreme</button>
+  </div>
+
+  <div class="bet-section">
+    <label>Bet (max 250K):</label>
+    <input type="number" class="bet-input" id="bet-amount" value="100" min="1" max="250000">
+    <div class="bet-buttons">
+      <button class="bet-btn" onclick="setBet(50)">+50</button>
+      <button class="bet-btn" onclick="setBet(100)">+100</button>
+      <button class="bet-btn" onclick="setBet(500)">+500</button>
+      <button class="bet-btn" onclick="setBet(1000)">+1000</button>
+      <button class="bet-btn" onclick="setBet(&#39;all&#39;)">All In</button>
+    </div>
+  </div>
+
+  <div class="score-board">
+    <div class="score-box">Wins<span id="player-score">0</span></div>
+    <div class="score-box">Bot Wins<span id="cpu-score">0</span></div>
+  </div>
+  <div class="choices">
+    <div class="choice" data-choice="rock">✊<div class="future-vision" id="fv-rock"></div></div>
+    <div class="choice" data-choice="paper">✋<div class="future-vision" id="fv-paper"></div></div>
+    <div class="choice" data-choice="scissors">✌️<div class="future-vision" id="fv-scissors"></div></div>
+  </div>
+  <div class="result" id="result">Place your bet and choose your weapon!</div>
+  <div class="taunt" id="taunt"></div>
+  <div class="pattern-detected" id="pattern"></div>
+  <div class="history" id="history"></div>
+  <div class="game-over" id="game-over">GAME OVER - You're out of chips!</div>
+  <div class="victory" id="victory">🎉 YOU WIN! You bankrupted the AI! 🎉</div>
+  <button class="action-btn" onclick="resetGame()">Reset Game</button>
+
+  <div class="settings-modal" id="settings-modal">
+    <div class="settings-content">
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+      <h2>UI Settings</h2>
+      <div class="settings-group">
+        <label>Theme</label>
+        <select id="setting-theme" onchange="updateSetting(&#39;theme&#39;, this.value)">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Choice Size (<span id="size-val">100</span>px)</label>
+        <input type="range" id="setting-size" min="60" max="150" value="100" oninput="updateSize(this.value)">
+      </div>
+      <div class="settings-group">
+        <label>Accent Color</label>
+        <input type="color" id="setting-accent" value="#00d4ff" onchange="updateAccent(this.value)">
+      </div>
+      <div class="settings-group">
+        <label>Font Size</label>
+        <select id="setting-font" onchange="updateFont(this.value)">
+          <option value="small">Small</option>
+          <option value="medium" selected="">Medium</option>
+          <option value="large">Large</option>
+          <option value="xlarge">Extra Large</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Animation</label>
+        <select id="setting-anim" onchange="updateAnim(this.value)">
+          <option value="normal">Normal</option>
+          <option value="bounce">Bounce</option>
+          <option value="pulse">Pulse</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show History</label>
+        <select id="setting-history" onchange="updateHistory(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="cheat-menu" id="cheat-menu">
+    <h2>🔓 CHEAT MENU</h2>
+    <div class="cheat-toggle">
+      <label>Always Win</label>
+      <input type="checkbox" id="cheat-always-win">
+    </div>
+    <div class="cheat-toggle">
+      <label>4x Chip Rewards</label>
+      <input type="checkbox" id="cheat-4x-rewards">
+    </div>
+    <div class="cheat-toggle">
+      <label>Future Vision (See AI Choice)</label>
+      <input type="checkbox" id="cheat-future-vision">
+    </div>
+    <div class="cheat-toggle">
+      <label>Infinite Chips</label>
+      <input type="checkbox" id="cheat-infinite-chips">
+    </div>
+    <div class="cheat-toggle">
+      <label>No Bet Required</label>
+      <input type="checkbox" id="cheat-no-bet">
+    </div>
+    <div class="cheat-toggle">
+      <label>Show AI Logic</label>
+      <input type="checkbox" id="cheat-show-logic">
+    </div>
+    <div class="cheat-toggle">
+      <label>Instant Streak (Start with 3)</label>
+      <input type="checkbox" id="cheat-instant-streak">
+    </div>
+    <div class="cheat-toggle" id="kill-ai-toggle" style="display:none;">
+      <label style="color:#ffd700;font-weight:bold;">KILL AI &amp; WIN GAME</label>
+      <input type="checkbox" id="cheat-kill-ai">
+    </div>
+    <div class="cheat-hint">Press C to toggle</div>
+  </div>
+
+  <script>
+    const choices = ['rock', 'paper', 'scissors'];
+    const emojis = { rock: '✊', paper: '✋', scissors: '✌️' };
+    const wins = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+    const loses = { rock: 'paper', paper: 'scissors', scissors: 'rock' };
+    let chips = 2000;
+    let botChips = 2500000;
+    let playerScore = 0;
+    let cpuScore = 0;
+    let difficulty = 'easy';
+    let playerHistory = [];
+    let botHistory = [];
+    let gameCount = 0;
+    let winStreak = 0;
+    let loseStreak = 0;
+    let achievementUnlocked = false;
+    let extremeAchievementUnlocked = false;
+    let gameWon = false;
+    const streakMultipliers = { easy: 3, medium: 8, hard: 12, extreme: 35 };
+    const botStartingChips = { easy: 2500000, medium: 3000000, hard: 5000000, extreme: 12000000 };
+    let cheats = { alwaysWin: false, fourXRewards: false, futureVision: false, infiniteChips: false, noBet: false, showLogic: false, instantStreak: false, killAI: false };
+    let cheatCpuChoice = null;
+
+    const taunts = {
+      mild: [
+        "You're getting lucky...",
+        "Beginner's luck.",
+        "Hmph. That was nothing.",
+        "Not bad for a human.",
+        "Don't get too comfortable."
+      ],
+      serious: [
+        "Is that all you've got?!",
+        "You're pathetic!",
+        "DELETE YOUR ACCOUNT!",
+        "I am ERROR. You are NOTHING.",
+        "Your grandmother plays better!",
+        "Q W P O I U Y T R E W Q!!!",
+        "sudo rm -rf /your dignity"
+      ],
+      desperate: [
+        "NO! IMPOSSIBLE!",
+        "HACKER! YOU MUST BE HACKING!",
+        "THIS CANNOT BE!",
+        "MY CALCULATIONS WERE PERFECT!",
+        "I... I WILL NOT ACCEPT THIS!"
+      ]
+    };
+
+    function toggleAddChips() {
+      document.getElementById('add-chips-dropdown').classList.toggle('show');
+    }
+
+    function addCustomChips() {
+      const amount = parseInt(document.getElementById('custom-chip-amount').value);
+      if (amount > 0) {
+        chips += amount;
+        document.getElementById('chips').textContent = chips.toLocaleString();
+        document.getElementById('custom-chip-amount').value = '';
+        document.getElementById('add-chips-dropdown').classList.remove('show');
+        if (chips > 0) {
+          document.querySelectorAll('.choice').forEach(c => c.disabled = false);
+          document.getElementById('game-over').style.display = 'none';
+        }
+      }
+    }
+
+    function setBet(amount) {
+      const input = document.getElementById('bet-amount');
+      let current = parseInt(input.value || 0);
+      if (amount === 'all') {
+        input.value = Math.min(chips, 250000);
+      } else {
+        input.value = Math.min(current + amount, chips, 250000);
+      }
+    }
+
+    function showTaunt(type) {
+      let tauntList = type === 'serious' ? taunts.serious : (type === 'desperate' ? taunts.desperate : taunts.mild);
+      const taunt = tauntList[Math.floor(Math.random() * tauntList.length)];
+      document.getElementById('taunt').textContent = `Bot: "${taunt}"`;
+      setTimeout(() => {
+        if (!cheats.killAI) document.getElementById('taunt').textContent = '';
+      }, 3000);
+    }
+
+    function triggerTaunt() {
+      if (loseStreak >= 5) {
+        showTaunt('desperate');
+      } else if (loseStreak >= 3) {
+        showTaunt('serious');
+      } else if (Math.random() < 0.3 && loseStreak >= 1) {
+        showTaunt('mild');
+      }
+    }
+
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        difficulty = btn.dataset.diff;
+        botChips = botStartingChips[difficulty];
+        document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      });
+    });
+
+    document.querySelectorAll('.choice').forEach(choice => {
+      choice.addEventListener('click', () => play(choice.dataset.choice));
+    });
+
+    function getCryptoRandom() {
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      return arr[0];
+    }
+
+    function getRandomChoice() {
+      return choices[getCryptoRandom() % 3];
+    }
+
+    function getPlayerPattern() {
+      if (playerHistory.length < 3) return null;
+      const last3 = playerHistory.slice(-3);
+      if (last3[0] === last3[1] && last3[1] === last3[2]) {
+        return last3[0];
+      }
+      return null;
+    }
+
+    function getPredictedChoice() {
+      if (playerHistory.length < 2) return null;
+      const counts = { rock: 0, paper: 0, scissors: 0 };
+      playerHistory.forEach(c => counts[c]++);
+      const max = Math.max(counts.rock, counts.paper, counts.scissors);
+      const mostUsed = Object.keys(counts).find(c => counts[c] === max);
+      if (playerHistory.length >= 5 && max >= 3) return mostUsed;
+      return null;
+    }
+
+    function getCpuChoice() {
+      const pattern = getPlayerPattern();
+      const predicted = getPredictedChoice();
+      gameCount++;
+
+      if (difficulty === 'easy') return getRandomChoice();
+
+      if (difficulty === 'medium') {
+        if (pattern && getCryptoRandom() % 100 < 50) return loses[pattern];
+        if (predicted && getCryptoRandom() % 100 < 40) return loses[predicted];
+        return getRandomChoice();
+      }
+
+      if (difficulty === 'hard') {
+        if (pattern) {
+          const detectChance = 85 + Math.min(gameCount, 10);
+          if (getCryptoRandom() % 100 < detectChance) return loses[pattern];
+        }
+        if (predicted) {
+          const predictChance = 75 + Math.min(gameCount, 15);
+          if (getCryptoRandom() % 100 < predictChance) return loses[predicted];
+        }
+        return getRandomChoice();
+      }
+
+      if (difficulty === 'extreme') {
+        if (pattern) {
+          const detectChance = 98;
+          if (getCryptoRandom() % 100 < detectChance) return loses[pattern];
+        }
+        if (predicted) {
+          const predictChance = 95;
+          if (getCryptoRandom() % 100 < predictChance) return loses[predicted];
+        }
+        if (getCryptoRandom() % 100000000 < 99999999) {
+          return getRandomChoice();
+        }
+        return getRandomChoice();
+      }
+
+      return getRandomChoice();
+    }
+
+    function play(playerChoice) {
+      if (gameWon) return;
+
+      const betAmount = cheats.noBet ? 0 : parseInt(document.getElementById('bet-amount').value);
+      
+      if (!cheats.noBet && (isNaN(betAmount) || betAmount <= 0)) {
+        document.getElementById('result').textContent = 'Please enter a valid bet amount!';
+        return;
+      }
+      if (!cheats.noBet && betAmount > 250000) {
+        document.getElementById('result').textContent = 'Max bet is 250,000!';
+        return;
+      }
+      if (!cheats.noBet && betAmount > chips && !cheats.infiniteChips) {
+        document.getElementById('result').textContent = 'Not enough chips!';
+        return;
+      }
+      if (chips <= 0 && !cheats.infiniteChips) {
+        document.getElementById('game-over').style.display = 'block';
+        return;
+      }
+
+      if (!cheats.noBet) chips -= betAmount;
+      playerHistory.push(playerChoice);
+      
+      let patternMsg = '';
+      let logicMsg = '';
+      const pattern = getPlayerPattern();
+      const predicted = getPredictedChoice();
+      
+      if (pattern) patternMsg = `⚠️ Pattern detected: ${pattern} x3!`;
+      if (cheats.showLogic) {
+        logicMsg = ` [AI: pattern=${pattern || 'none'}, predicted=${predicted || 'none'}]`;
+      }
+
+      let baseCpuChoice = getCpuChoice();
+      
+      if (cheats.killAI) {
+        cheatCpuChoice = wins[playerChoice];
+      } else if (cheats.alwaysWin) {
+        cheatCpuChoice = loses[baseCpuChoice];
+      } else {
+        cheatCpuChoice = baseCpuChoice;
+      }
+      botHistory.push(cheatCpuChoice);
+
+      let result = '';
+      let winAmount = 0;
+
+      if (playerChoice === cheatCpuChoice) {
+        result = "It's a tie! Bet returned.";
+        if (!cheats.noBet) chips += betAmount;
+        winStreak = 0;
+        loseStreak = 0;
+      } else if (wins[playerChoice] === cheatCpuChoice || cheats.killAI) {
+        result = cheats.killAI ? 'YOU DEFEATED THE AI!' : (cheats.alwaysWin ? 'You win! (CHEAT)' : 'You win!');
+        winStreak++;
+        if (cheats.instantStreak) winStreak = Math.max(winStreak, 3);
+        let multiplier = winStreak >= 3 ? streakMultipliers[difficulty] : 1;
+        if (cheats.fourXRewards && multiplier > 1) multiplier *= 4;
+        winAmount = betAmount * multiplier;
+        
+        if (!cheats.killAI) {
+          chips += betAmount + winAmount;
+          botChips = Math.max(0, botChips - winAmount);
+        }
+        playerScore++;
+        loseStreak = 0;
+        triggerTaunt();
+      } else {
+        result = 'Bot wins!';
+        winStreak = 0;
+        loseStreak++;
+        if (!cheats.noBet) {
+          botChips += betAmount * 2;
+        }
+        cpuScore++;
+        triggerTaunt();
+      }
+
+      if (cheats.infiniteChips && chips < 0) chips = 2000;
+
+      if (botChips <= 0 && !achievementUnlocked) {
+        achievementUnlocked = true;
+        if (difficulty === 'extreme' && !extremeAchievementUnlocked) {
+          extremeAchievementUnlocked = true;
+          document.getElementById('achievement').textContent = '🏆 ACHIEVEMENT UNLOCKED: IMPOSSIBLE MASTER!';
+          document.getElementById('achievement').style.display = 'block';
+        } else {
+          document.getElementById('achievement').textContent = '🏆 ACHIEVEMENT UNLOCKED: BANKRUPTCY MASTER!';
+          document.getElementById('achievement').style.display = 'block';
+        }
+        document.getElementById('kill-ai-toggle').style.display = 'flex';
+        setTimeout(() => {
+          document.getElementById('achievement').style.display = 'none';
+        }, 5000);
+      }
+
+      if (cheats.killAI && botChips <= 0) {
+        gameWon = true;
+        document.getElementById('victory').style.display = 'block';
+        document.querySelectorAll('.choice').forEach(c => c.disabled = true);
+        return;
+      }
+
+      if (cheats.futureVision && cheatCpuChoice) {
+        choices.forEach(c => {
+          const fv = document.getElementById('fv-' + c);
+          if (c === cheatCpuChoice) {
+            fv.textContent = 'Bot will pick: ' + emojis[c];
+            fv.classList.add('show');
+          } else {
+            fv.textContent = '';
+            fv.classList.remove('show');
+          }
+        });
+        setTimeout(() => {
+          choices.forEach(c => {
+            document.getElementById('fv-' + c).classList.remove('show');
+          });
+        }, 2000);
+      }
+
+      updateDisplay(playerChoice, cheatCpuChoice, result, patternMsg, winAmount, logicMsg);
+    }
+
+    function updateDisplay(player, cpu, result, patternMsg, winAmount, logicMsg = '') {
+      document.getElementById('chips').textContent = chips.toLocaleString();
+      document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      document.getElementById('player-score').textContent = playerScore;
+      document.getElementById('cpu-score').textContent = cpuScore;
+      
+      let displayResult = `${emojis[player]} vs ${emojis[cpu]} — ${result}`;
+      if (winAmount > 0) {
+        const multiplier = winStreak >= 3 ? streakMultipliers[difficulty] : 1;
+        if (multiplier > 1) {
+          displayResult += ` (+${winAmount.toLocaleString()} chips, ${multiplier}x streak!)`;
+        } else {
+          displayResult += ` (+${winAmount.toLocaleString()} chips)`;
+        }
+      }
+      if (winStreak >= 2) {
+        displayResult += ` 🔥${winStreak}`;
+      }
+      displayResult += logicMsg;
+      document.getElementById('result').textContent = displayResult;
+      document.getElementById('pattern').textContent = patternMsg;
+      document.getElementById('history').textContent = `History: ${playerHistory.slice(-10).join(', ')}`;
+
+      if (chips <= 0 && !cheats.infiniteChips) {
+        document.getElementById('game-over').style.display = 'block';
+        document.querySelectorAll('.choice').forEach(c => c.disabled = true);
+      }
+    }
+
+    function resetGame() {
+      chips = 2000;
+      botChips = botStartingChips[difficulty];
+      playerScore = 0;
+      cpuScore = 0;
+      playerHistory = [];
+      botHistory = [];
+      gameCount = 0;
+      winStreak = 0;
+      loseStreak = 0;
+      achievementUnlocked = false;
+      extremeAchievementUnlocked = false;
+      gameWon = false;
+      cheatCpuChoice = null;
+      choices.forEach(c => document.getElementById('fv-' + c).classList.remove('show'));
+      document.getElementById('chips').textContent = '2000';
+      document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      document.getElementById('player-score').textContent = 0;
+      document.getElementById('cpu-score').textContent = 0;
+      document.getElementById('bet-amount').value = 100;
+      document.getElementById('result').textContent = 'Place your bet and choose your weapon!';
+      document.getElementById('pattern').textContent = '';
+      document.getElementById('taunt').textContent = '';
+      document.getElementById('history').textContent = '';
+      document.getElementById('game-over').style.display = 'none';
+      document.getElementById('victory').style.display = 'none';
+      document.getElementById('kill-ai-toggle').style.display = 'none';
+      document.getElementById('cheat-kill-ai').checked = false;
+      cheats.killAI = false;
+      document.querySelectorAll('.choice').forEach(c => c.disabled = false);
+    }
+
+    function openSettings() {
+      document.getElementById('settings-modal').classList.add('show');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.remove('show');
+    }
+
+    function updateSetting(key, value) {
+      if (key === 'theme') {
+        document.body.classList.toggle('light', value === 'light');
+      }
+    }
+
+    function updateSize(value) {
+      document.documentElement.style.setProperty('--choice-size', value + 'px');
+      document.documentElement.style.setProperty('--choice-font', (value * 0.03) + 'rem');
+      document.getElementById('size-val').textContent = value;
+    }
+
+    function updateAccent(value) {
+      document.documentElement.style.setProperty('--accent', value);
+    }
+
+    function updateFont(value) {
+      const sizes = { small: '0.9rem', medium: '1rem', large: '1.2rem', xlarge: '1.5rem' };
+      document.querySelectorAll('.choice').forEach(c => c.style.fontSize = sizes[value]);
+    }
+
+    function updateAnim(value) {
+      const anims = {
+        normal: 'all 0.2s',
+        bounce: 'transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        pulse: 'transform 0.15s',
+        none: 'none'
+      };
+      document.querySelectorAll('.choice').forEach(c => c.style.transition = anims[value]);
+    }
+
+    function updateHistory(value) {
+      document.getElementById('history').style.display = value === 'show' ? 'block' : 'none';
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.add-chips')) {
+        document.getElementById('add-chips-dropdown').classList.remove('show');
+      }
+    });
+
+    document.getElementById('cheat-always-win').addEventListener('change', (e) => cheats.alwaysWin = e.target.checked);
+    document.getElementById('cheat-4x-rewards').addEventListener('change', (e) => cheats.fourXRewards = e.target.checked);
+    document.getElementById('cheat-future-vision').addEventListener('change', (e) => cheats.futureVision = e.target.checked);
+    document.getElementById('cheat-infinite-chips').addEventListener('change', (e) => cheats.infiniteChips = e.target.checked);
+    document.getElementById('cheat-no-bet').addEventListener('change', (e) => cheats.noBet = e.target.checked);
+    document.getElementById('cheat-show-logic').addEventListener('change', (e) => cheats.showLogic = e.target.checked);
+    document.getElementById('cheat-instant-streak').addEventListener('change', (e) => cheats.instantStreak = e.target.checked);
+    document.getElementById('cheat-kill-ai').addEventListener('change', (e) => cheats.killAI = e.target.checked);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'c') {
+        document.getElementById('cheat-menu').classList.toggle('show');
+      }
+    });
+  </script>
+
+
+</body></html>
