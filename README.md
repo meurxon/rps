@@ -1,3 +1,4 @@
-plug walk af
-https://meurxon.github.io/rps/ 
-theres like 3 secrets.
+new update twin, new secrets, more chaos, you will not survive.
+          https://meurxon.github.io/rock-paper-scissors-gamble/ to play
+                    i spent time on ts
+                    
