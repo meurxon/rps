@@ -1,0 +1,2629 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)file:///C:/void-drifter/rock-paper-scissors.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock Paper Scissors</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --accent: #00d4ff;
+      --accent-hover: #00b8e6;
+      --text: #fff;
+      --text-muted: #888;
+      --danger: #e94560;
+      --chip-gold: #ffd700;
+      --choice-size: 100px;
+      --choice-font: 3rem;
+      --border-radius: 10px;
+      --btn-radius: 5px;
+      --box-bg: rgba(255,255,255,0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text);
+      transition: background 0.3s;
+    }
+    body.light { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #333; }
+    body.light .score-box, body.light .choice, body.light .bet-input, body.light .diff-btn:not(.active), body.light .bet-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.2); }
+    body.light h1 { color: #333; text-shadow: none; }
+    body.light .chips-display { color: #b8860b; }
+    body.light .diff-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    body.light .result { color: #333; }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 20px rgba(255,255,255,0.3); transition: all 0.3s; }
+    .achievement {
+      background: linear-gradient(90deg, #ffd700, #ff8c00);
+      color: #000;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+      animation: achievementPop 0.5s ease-out;
+    }
+    @keyframes achievementPop {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; justify-content: center; }
+    .chips-display { font-size: 1.5rem; color: var(--chip-gold); }
+    .chips-display span { font-weight: bold; font-size: 1.8rem; }
+    .bot-chips { font-size: 1rem; color: var(--danger); }
+    .bot-chips span { font-weight: bold; }
+    .add-chips { position: relative; display: inline-block; }
+    .add-chips-btn {
+      padding: 0.5rem 1rem;
+      background: var(--chip-gold);
+      color: #333;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .add-chips-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.5rem;
+      background: #2a2a4a;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--btn-radius);
+      padding: 0.5rem;
+      display: none;
+      z-index: 100;
+      min-width: 200px;
+    }
+    body.light .add-chips-dropdown { background: #fff; border-color: rgba(0,0,0,0.2); }
+    .add-chips-dropdown.show { display: block; }
+    .add-chips-dropdown input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 3px;
+      color: #fff;
+    }
+    body.light .add-chips-dropdown input { background: rgba(0,0,0,0.05); color: #333; }
+    .add-chips-dropdown button {
+      width: 100%;
+      padding: 0.5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .settings-btn {
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+    }
+    .difficulty {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .diff-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      background: var(--box-bg);
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .diff-btn.active { background: var(--accent); color: var(--bg-primary); border-color: var(--accent); }
+    .diff-btn:hover:not(.active) { background: rgba(255,255,255,0.2); }
+    .bet-section {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .bet-section label { font-size: 1rem; }
+    .bet-input {
+      width: 100px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      background: var(--box-bg);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: var(--btn-radius);
+      color: var(--text);
+      text-align: center;
+    }
+    .bet-buttons { display: flex; gap: 0.3rem; }
+    .bet-btn {
+      padding: 0.4rem 0.7rem;
+      font-size: 0.8rem;
+      background: var(--box-bg);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .bet-btn:hover { background: rgba(255,255,255,0.2); }
+    .score-board {
+      display: flex;
+      gap: 3rem;
+      margin-bottom: 2rem;
+      font-size: 1.2rem;
+    }
+    .score-box {
+      text-align: center;
+      padding: 1rem 2rem;
+      background: var(--box-bg);
+      border-radius: var(--border-radius);
+    }
+    .score-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--accent); }
+    .choices { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+    .choice {
+      width: var(--choice-size);
+      height: var(--choice-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--choice-font);
+      background: var(--box-bg);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .choice:hover { transform: scale(1.1); background: rgba(255,255,255,0.2); }
+    .keybind-hint {
+      position: absolute;
+      bottom: -20px;
+      font-size: 0.7rem;
+      color: #888;
+      background: rgba(0,0,0,0.5);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .choice:disabled { opacity: 0.3; cursor: not-allowed; }
+    .result { font-size: 1.5rem; min-height: 2rem; margin-bottom: 0.5rem; transition: all 0.3s; }
+    .taunt { font-size: 1rem; color: var(--danger); min-height: 1.2rem; margin-bottom: 0.5rem; font-style: italic; }
+    .pattern-detected { font-size: 0.85rem; color: var(--danger); min-height: 1.2rem; margin-bottom: 0.5rem; }
+    .history { font-size: 0.9rem; color: var(--text-muted); }
+    .game-over {
+      font-size: 1.2rem;
+      color: var(--danger);
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .victory {
+      font-size: 2rem;
+      color: var(--chip-gold);
+      margin-bottom: 1rem;
+      display: none;
+      text-align: center;
+      animation: victoryGlow 1s infinite alternate;
+    }
+    @keyframes victoryGlow {
+      from { text-shadow: 0 0 10px var(--chip-gold); }
+      to { text-shadow: 0 0 30px var(--chip-gold), 0 0 50px orange; }
+    }
+    button.action-btn {
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      background: var(--danger);
+      color: var(--text);
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 1rem;
+    }
+    button.action-btn:hover { background: #ff6b6b; }
+    button.action-btn:disabled { background: #555; cursor: not-allowed; }
+
+    .settings-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .settings-modal.show { display: flex; }
+    .settings-content {
+      background: #2a2a4a;
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      max-width: 400px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    body.light .settings-content { background: #fff; }
+    .settings-content h2 { margin-bottom: 1rem; }
+    .settings-group { margin-bottom: 1.5rem; }
+    .settings-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+    .settings-group input[type="color"] {
+      width: 100%;
+      height: 40px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .settings-group select, .settings-group input[type="range"] {
+      width: 100%;
+      padding: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 5px;
+      color: #fff;
+    }
+    body.light .settings-group select, body.light .settings-group input[type="range"] { background: rgba(0,0,0,0.05); color: #333; }
+    .settings-close {
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      float: right;
+    }
+
+    .cheat-menu {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2a2a4a;
+      border: 2px solid #ff0000;
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      display: none;
+      z-index: 2000;
+      min-width: 320px;
+    }
+    .cheat-menu.show { display: block; }
+    body.light .cheat-menu { background: #fff; border-color: #ff0000; }
+    .cheat-menu h2 {
+      color: #ff0000;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .cheat-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 5px;
+    }
+    .cheat-toggle label { cursor: pointer; flex: 1; }
+    .cheat-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #ff0000;
+      cursor: pointer;
+    }
+    .cheat-hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+    }
+    .future-vision {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,0,0,0.9);
+      padding: 0.3rem 0.8rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      display: none;
+    }
+    .future-vision.show { display: block; }
+
+    .quest-panel {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #2a2a4a;
+      border: 2px solid var(--chip-gold);
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      width: 250px;
+      z-index: 100;
+    }
+    .save-panel {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    .save-btn {
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .save-btn:hover { transform: scale(1.05); }
+    .save-btn.export { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .save-btn.import { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    body.light .quest-panel { background: #fff; border-color: #b8860b; }
+    .quest-panel h3 {
+      color: var(--chip-gold);
+      margin-bottom: 1rem;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+    .quest-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 5px;
+      padding: 0.7rem;
+      margin-bottom: 0.5rem;
+    }
+    .quest-item.completed {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+    .quest-item .quest-name {
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+    }
+    .quest-item .quest-reward {
+      font-size: 0.75rem;
+      color: var(--chip-gold);
+    }
+    .quest-item .quest-progress {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .lucky-btn {
+      padding: 0.5rem 1rem;
+      background: linear-gradient(45deg, #ff6b6b, #ffd700);
+      color: #fff;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .lucky-btn:hover { transform: scale(1.05); }
+    .lucky-message {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(90deg, #ffd700, #ff8c00);
+      color: #000;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      display: none;
+      animation: luckyPop 0.5s ease-out;
+      z-index: 3000;
+    }
+    @keyframes luckyPop {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .wheel-menu {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+    .wheel-menu.show { display: flex; }
+    .wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 5px solid var(--chip-gold);
+      transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+      background: conic-gradient(
+        #e94560 0deg 72deg,
+        #00d4ff 72deg 144deg,
+        #ffd700 144deg 216deg,
+        #00d4ff 216deg 288deg,
+        #e94560 288deg 360deg
+      );
+    }
+    .wheel-pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 30px solid var(--chip-gold);
+    }
+    .wheel-label {
+      position: absolute;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+    .wheel-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+    }
+    .timer-display {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 1.2rem;
+      color: var(--chip-gold);
+      background: rgba(0,0,0,0.7);
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      display: none;
+    }
+    .chat-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 300px;
+      display: none;
+      flex-direction: column;
+      z-index: 2500;
+    }
+    .chat-container.show { display: flex; }
+    .chat-messages {
+      background: rgba(0,0,0,0.8);
+      border-radius: 10px 10px 0 0;
+      padding: 0.5rem;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 5px;
+    }
+    .chat-msg {
+      font-size: 0.8rem;
+      margin-bottom: 0.3rem;
+      padding: 0.3rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+    }
+    .chat-msg.error { color: #ff6b6b; }
+    .chat-msg.success { color: #00ff00; }
+    .chat-msg.info { color: #00d4ff; }
+    .chat-input {
+      background: rgba(0,0,0,0.8);
+      border: none;
+      padding: 0.5rem;
+      border-radius: 0 0 10px 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+    .help-menu {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.95);
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 1.5rem;
+      display: none;
+      z-index: 3000;
+      max-width: 500px;
+    }
+    .help-menu.show { display: block; }
+    .help-menu h3 { color: var(--accent); margin-bottom: 1rem; }
+    .help-menu code { background: rgba(255,255,255,0.2); padding: 2px 5px; border-radius: 3px; }
+    .help-close { float: right; cursor: pointer; font-size: 1.5rem; }
+    .debug-panel {
+      position: fixed;
+      top: 100px;
+      left: 100px;
+      width: 200px;
+      background: rgba(0,0,0,0.9);
+      border: 2px solid #00ff00;
+      border-radius: 10px;
+      padding: 1rem;
+      display: none;
+      z-index: 4000;
+      cursor: move;
+      font-family: monospace;
+    }
+    .debug-panel.show { display: block; }
+    .debug-panel h4 { color: #00ff00; margin-bottom: 0.5rem; font-size: 0.9rem; cursor: move; }
+    .debug-panel .stat { color: #fff; font-size: 0.8rem; margin-bottom: 0.3rem; }
+    .debug-panel .fps { color: #00ff00; font-weight: bold; }
+    .debug-panel .close-btn { position: absolute; top: 5px; right: 10px; color: #ff0000; cursor: pointer; font-size: 1rem; }
+    .peek-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-size: 2rem;
+      color: var(--chip-gold);
+      display: none;
+      z-index: 2000;
+    }
+    .peek-display.show { display: block; }
+    .destruction-message {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(90deg, #000, #ff0000, #000);
+      color: #fff;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      display: none;
+      animation: destructionPulse 0.5s infinite alternate;
+      z-index: 3000;
+      text-align: center;
+    }
+    @keyframes destructionPulse {
+      from { box-shadow: 0 0 10px #ff0000; }
+      to { box-shadow: 0 0 30px #ff0000, 0 0 50px red; }
+    }
+    .loot-btn {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #9b59b6, #3498db);
+      border: 3px solid #ffd700;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 500;
+    }
+    .loot-btn:hover { transform: scale(1.1); }
+    .unlockables-toggle {
+      position: fixed;
+      left: 20px;
+      top: 90px;
+      width: 60px;
+      height: 30px;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      border: 2px solid #ffd700;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 0.8rem;
+      cursor: pointer;
+      z-index: 500;
+    }
+    .unlockables-toggle:hover { transform: scale(1.05); }
+    .unlockables-panel {
+      position: fixed;
+      left: 20px;
+      top: 125px;
+      width: 250px;
+      max-height: 60vh;
+      background: rgba(20,20,40,0.95);
+      border: 2px solid #3498db;
+      border-radius: 10px;
+      padding: 1rem;
+      display: none;
+      z-index: 500;
+      overflow-y: auto;
+    }
+    .unlockables-panel.show { display: block; }
+    .unlockables-panel h4 { color: #3498db; margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .unlock-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 5px;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .unlock-item .name { color: #ffd700; font-weight: bold; }
+    .unlock-item .key { color: #00d4ff; float: right; }
+    .unlock-item .condition { color: #888; font-size: 0.75rem; margin-top: 0.3rem; }
+    .unlockables-toggle-btn {
+      width: 100%;
+      padding: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid #555;
+      border-radius: 5px;
+      color: #888;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .unlockables-toggle-btn:hover { background: rgba(255,255,255,0.2); }
+    .unlockables-locked { display: none; margin-top: 0.5rem; }
+    .unlockables-locked.show { display: block; }
+    .unlock-item.locked { opacity: 0.5; }
+    .loot-panel {
+      position: fixed;
+      left: -400px;
+      top: 90px;
+      width: 380px;
+      background: rgba(20,20,40,0.95);
+      border: 2px solid #9b59b6;
+      border-radius: 15px;
+      padding: 1rem;
+      transition: left 0.3s;
+      z-index: 600;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .loot-panel.show { left: 20px; }
+    .loot-panel h3 { color: #9b59b6; text-align: center; margin-bottom: 1rem; }
+    .crate-tier {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .crate-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #555;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .crate-btn.common { background: #8b8b8b; color: #fff; }
+    .crate-btn.uncommon { background: #2ecc71; color: #fff; }
+    .crate-btn.rare { background: #3498db; color: #fff; }
+    .crate-btn.epic { background: #9b59b6; color: #fff; }
+    .crate-btn.legendary { background: #f39c12; color: #fff; }
+    .crate-btn.mythic { background: #e74c3c; color: #fff; }
+    .crate-btn.selected { border-color: #fff; box-shadow: 0 0 10px #fff; }
+    .crate-price { text-align: center; margin: 1rem 0; color: #ffd700; font-weight: bold; }
+    .open-crate-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #f39c12, #e74c3c);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .inv-item {
+      background: rgba(255,255,255,0.1);
+      padding: 0.5rem;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+    .inv-item .count { color: #ffd700; font-weight: bold; }
+    .sell-btn {
+      width: 100%;
+      padding: 0.5rem;
+      background: #e74c3c;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+    .crate-result {
+      text-align: center;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 10px;
+      display: none;
+    }
+    .loot-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Rock Paper Scissors</h1>
+  <div class="achievement" id="achievement">🏆 ACHIEVEMENT UNLOCKED: BANKRUPTCY MASTER!</div>
+  
+  <div class="header-row">
+    <div class="chips-display">You: <span id="chips">2000</span></div>
+    <div class="add-chips" id="add-chips-container" style="display: none;">
+      <button class="add-chips-btn" onclick="toggleAddChips()">+ Add</button>
+      <div class="add-chips-dropdown" id="add-chips-dropdown">
+        <input type="number" id="custom-chip-amount" placeholder="Enter amount">
+        <button onclick="addCustomChips()">Add</button>
+      </div>
+    </div>
+    <div class="bot-chips">Bot: <span id="bot-chips">2,500,000</span></div>
+  <button class="lucky-btn" onclick="tryLucky()">🍀 Lucky</button>
+  <button class="loot-btn" onclick="toggleLoot()">📦</button>
+  <button class="unlockables-toggle" onclick="toggleUnlockables()">🔓</button>
+  <div class="unlockables-panel" id="unlockables-panel">
+    <h4>🎁 Unlockables</h4>
+    <div class="unlock-item">
+      <span class="name">Fortune Wheel</span>
+      <span class="key">/</span>
+      <div class="condition" id="wheel-unlock-text">Unlock: Bot reaches 50% balance</div>
+    </div>
+    <div class="unlock-item">
+      <span class="name">Loot Crates</span>
+      <span class="key">Click</span>
+      <div class="condition">Always available</div>
+    </div>
+    <div class="unlock-item">
+      <span class="name">Cheat Menu</span>
+      <span class="key">C</span>
+      <div class="condition" id="cheat-unlock-text">Unlock: Beat Easy mode</div>
+    </div>
+    <div class="unlock-item">
+      <span class="name">Add Chips</span>
+      <span class="key">777</span>
+      <div class="condition" id="chips-unlock-text">Unlock: Beat all difficulties</div>
+    </div>
+    <div class="unlock-item">
+      <span class="name">Chat Console</span>
+      <span class="key">Q</span>
+      <div class="condition">Press Q to toggle</div>
+    </div>
+    <div class="unlock-item">
+      <span class="name">Help Menu</span>
+      <span class="key">`</span>
+      <div class="condition">Press ` to toggle</div>
+    </div>
+    <div class="unlock-item">
+      <span class="name">Quests</span>
+      <span class="key">Auto</span>
+      <div class="condition">Always visible on right</div>
+    </div>
+    <button class="unlockables-toggle-btn" onclick="toggleLockedCheats()">🔒 Locked Cheats ▾</button>
+    <div class="unlockables-locked" id="locked-cheats">
+      <div class="unlock-item locked">
+        <span class="name">ezmode</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">botbalance=3892</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">streak</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">iwantcookies</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">addchips=1000</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">iw4va</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">freemoney</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">godmode / nogod</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">infmoney / nofreemoney</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">noskip / paytoplay</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">seeall / blind</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">showlogic / hidelogic</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">quadruple / normalrewards</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">maxwin</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">jackpotmode</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">alwaysjackpot</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+      <div class="unlock-item locked">
+        <span class="name">killbot / revivebot</span>
+        <span class="key">Chat</span>
+        <div class="condition">Unlock: Beat all difficulties</div>
+      </div>
+    </div>
+  </div>
+  <button class="settings-btn" onclick="openSettings()">⚙️</button>
+  </div>
+  
+  <div class="difficulty">
+    <button class="diff-btn active" data-diff="easy">Easy</button>
+    <button class="diff-btn" data-diff="medium">Medium</button>
+    <button class="diff-btn" data-diff="hard">Hard</button>
+    <button class="diff-btn" data-diff="extreme">Extreme</button>
+  </div>
+
+  <div class="bet-section">
+    <label>Bet (max 250K):</label>
+    <input type="number" class="bet-input" id="bet-amount" value="100" min="1" max="250000">
+    <div class="bet-buttons">
+      <button class="bet-btn" onclick="setBet(50)">+50</button>
+      <button class="bet-btn" onclick="setBet(100)">+100</button>
+      <button class="bet-btn" onclick="setBet(500)">+500</button>
+      <button class="bet-btn" onclick="setBet(1000)">+1000</button>
+      <button class="bet-btn" onclick="setBet(&#39;all&#39;)">All In</button>
+    </div>
+  </div>
+
+  <div class="score-board">
+    <div class="score-box">Wins<span id="player-score">0</span></div>
+    <div class="score-box">Bot Wins<span id="cpu-score">0</span></div>
+  </div>
+  <div class="choices">
+    <div class="choice" data-choice="rock">✊<div class="future-vision" id="fv-rock"></div><span class="keybind-hint" id="keybind-rock"></span></div>
+    <div class="choice" data-choice="paper">✋<div class="future-vision" id="fv-paper"></div><span class="keybind-hint" id="keybind-paper"></span></div>
+    <div class="choice" data-choice="scissors">✌️<div class="future-vision" id="fv-scissors"></div><span class="keybind-hint" id="keybind-scissors"></span></div>
+  </div>
+  <div class="result" id="result">Place your bet and choose your weapon!</div>
+  <div class="taunt" id="taunt"></div>
+  <div class="pattern-detected" id="pattern"></div>
+  <div class="history" id="history"></div>
+  <div class="game-over" id="game-over" style="display: none;">GAME OVER - You're out of chips!</div>
+  <div class="victory" id="victory" style="display: none;">🎉 YOU WIN! You bankrupted the AI! 🎉</div>
+  <button class="action-btn" onclick="resetGame()">Reset Game</button>
+
+  <div class="lucky-message" id="lucky-message">🍀 LUCKY! +2,000,000 CHIPS!</div>
+
+  <div class="wheel-menu" id="wheel-menu">
+    <div class="wheel-close" onclick="closeWheel()">✕</div>
+    <div class="wheel-container">
+      <div class="wheel-pointer"></div>
+      <div class="wheel" id="wheel"></div>
+      <div class="wheel-label" style="top: 30px; left: 50%; transform: translateX(-50%);">LOSE 50K</div>
+      <div class="wheel-label" style="top: 80px; left: 25%;">20K</div>
+      <div class="wheel-label" style="top: 80px; left: 70%;">50K</div>
+      <div class="wheel-label" style="top: 150px; left: 15%;">WIN!</div>
+      <div class="wheel-label" style="top: 150px; left: 70%;">100K</div>
+    </div>
+  </div>
+
+  <div class="timer-display" id="timer-display" style="display: none;">⏱️ 5:00</div>
+  <div class="peek-display" id="peek-display">🔮 Bot will play: ✊</div>
+  <div class="destruction-message" id="destruction-message">⚛️ The chance of the win has now left the quantum realm ⚛️</div>
+
+  <div class="loot-panel" id="loot-panel">
+    <span class="loot-close" onclick="toggleLoot()">✕</span>
+    <h3>📦 LOOT CRATES</h3>
+    <div class="crate-tier">
+      <button class="crate-btn common selected" onclick="selectCrate(&#39;common&#39;)">Common</button>
+      <button class="crate-btn uncommon" onclick="selectCrate(&#39;uncommon&#39;)">Uncommon</button>
+      <button class="crate-btn rare" onclick="selectCrate(&#39;rare&#39;)">Rare</button>
+    </div>
+    <div class="crate-tier">
+      <button class="crate-btn epic" onclick="selectCrate(&#39;epic&#39;)">Epic</button>
+      <button class="crate-btn legendary" onclick="selectCrate(&#39;legendary&#39;)">Legendary</button>
+      <button class="crate-btn mythic" onclick="selectCrate(&#39;mythic&#39;)">Mythic</button>
+    </div>
+    <div class="crate-price" id="crate-price">Cost: 2,000 chips</div>
+    <button class="open-crate-btn" onclick="openCrate()">OPEN CRATE</button>
+    <div class="crate-result" id="crate-result"></div>
+    <h4 style="margin-top:1rem;color:#ffd700;">🎒 Inventory</h4>
+    <div class="inventory-grid" id="inventory"></div>
+    <button class="sell-btn" onclick="sellAll()">SELL ALL</button>
+  </div>
+
+  <div class="chat-container" id="chat-container">
+    <div class="chat-messages" id="chat-messages"></div>
+    <input type="text" class="chat-input" id="chat-input" placeholder="Type command..." onkeydown="handleChat(event)">
+  </div>
+
+  <div class="help-menu" id="help-menu">
+    <span class="help-close" onclick="closeHelp()">✕</span>
+    <h3>🔧 Console Commands</h3>
+    <div id="help-basic-commands"></div>
+    <div id="help-locked-commands" style="display:none;">
+      <p style="color:#ffd700;margin:0.5rem 0;">━━━ UNLOCKED CHEATS ━━━</p>
+    </div>
+    <div id="help-debug-commands" style="display:none;">
+      <p style="color:#00ff00;margin:0.5rem 0;">━━━ DEBUG (Press D) ━━━</p>
+      <p><code>debug</code> - Toggle debug panel</p>
+    </div>
+  </div>
+
+  <div class="debug-panel" id="debug-panel">
+    <span class="close-btn" onclick="toggleDebug()">✕</span>
+    <h4 id="debug-drag">⚡ DEBUG</h4>
+    <div class="stat">FPS: <span class="fps" id="debug-fps">0</span></div>
+    <div class="stat">Memory: <span id="debug-mem">--</span></div>
+    <div class="stat">Games: <span id="debug-games">0</span></div>
+    <div class="stat">Wins: <span id="debug-wins">0</span></div>
+    <div class="stat">Losses: <span id="debug-losses">0</span></div>
+    <div class="stat">Streak: <span id="debug-streak">0</span></div>
+    <div class="stat">Bot Chips: <span id="debug-bot">0</span></div>
+    <div class="stat">Your Chips: <span id="debug-player">0</span></div>
+  </div>
+
+  <div class="quest-panel" id="quest-panel">
+    <h3>📜 Quests</h3>
+    <div id="quest-list"><div class="quest-item">
+          <div class="quest-name">Win 3x in a row</div>
+          <div class="quest-reward">Reward: 5,000 chips</div>
+          <div class="quest-progress">Progress: 0/3</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Win 5x in a row</div>
+          <div class="quest-reward">Reward: 15,000 chips</div>
+          <div class="quest-progress">Progress: 0/5</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Win 10x in a row</div>
+          <div class="quest-reward">Reward: 100,000 chips</div>
+          <div class="quest-progress">Progress: 0/10</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Bet 100,000 chips</div>
+          <div class="quest-reward">Reward: 10,000 chips</div>
+          <div class="quest-progress">Progress: 100/100,000</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Bet 250,000 chips</div>
+          <div class="quest-reward">Reward: 50,000 chips</div>
+          <div class="quest-progress">Progress: 100/250,000</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Bankrupt Easy Bot</div>
+          <div class="quest-reward">Reward: 2,500,000 chips</div>
+          <div class="quest-progress">Progress: Not completed</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Bankrupt Medium Bot</div>
+          <div class="quest-reward">Reward: 5,000,000 chips</div>
+          <div class="quest-progress">Progress: Not completed</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Bankrupt Hard Bot</div>
+          <div class="quest-reward">Reward: 10,000,000 chips</div>
+          <div class="quest-progress">Progress: Not completed</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Bankrupt Extreme Bot</div>
+          <div class="quest-reward">Reward: 50,000,000 chips</div>
+          <div class="quest-progress">Progress: Not completed</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Reach 1,000,000 chips</div>
+          <div class="quest-reward">Reward: 100,000 chips</div>
+          <div class="quest-progress">Progress: 2000/1,000,000</div>
+        </div><div class="quest-item">
+          <div class="quest-name">Reach 10,000,000 chips</div>
+          <div class="quest-reward">Reward: 1,000,000 chips</div>
+          <div class="quest-progress">Progress: 2000/10,000,000</div>
+        </div></div>
+  </div>
+
+  <div class="save-panel">
+    <button class="save-btn" onclick="saveGame()">💾 Save</button>
+    <button class="save-btn export" onclick="exportSave()">📤 Export</button>
+    <button class="save-btn import" onclick="importSave()">📥 Import</button>
+    <input type="file" id="import-file" style="display:none" onchange="loadFromFile(event)">
+  </div>
+
+  <div class="settings-modal" id="settings-modal">
+    <div class="settings-content">
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+      <h2>UI Settings</h2>
+      <div class="settings-group">
+        <label>Theme</label>
+        <select id="setting-theme" onchange="updateSetting(&#39;theme&#39;, this.value)">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Choice Size (<span id="size-val">100</span>px)</label>
+        <input type="range" id="setting-size" min="60" max="150" value="100" oninput="updateSize(this.value)">
+      </div>
+      <div class="settings-group">
+        <label>Accent Color</label>
+        <input type="color" id="setting-accent" value="#00d4ff" onchange="updateAccent(this.value)">
+      </div>
+      <div class="settings-group">
+        <label>Font Size</label>
+        <select id="setting-font" onchange="updateFont(this.value)">
+          <option value="small">Small</option>
+          <option value="medium" selected="">Medium</option>
+          <option value="large">Large</option>
+          <option value="xlarge">Extra Large</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Animation</label>
+        <select id="setting-anim" onchange="updateAnim(this.value)">
+          <option value="normal">Normal</option>
+          <option value="bounce">Bounce</option>
+          <option value="pulse">Pulse</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show History</label>
+        <select id="setting-history" onchange="updateHistory(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Taunts</label>
+        <select id="setting-taunts" onchange="toggleSetting(&#39;taunts&#39;, this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Quest Panel</label>
+        <select id="setting-quests" onchange="toggleQuestPanel(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Lucky Button</label>
+        <select id="setting-lucky" onchange="toggleLucky(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Timer</label>
+        <select id="setting-timer" onchange="toggleTimer(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Win Streak</label>
+        <select id="setting-streak" onchange="toggleStreak(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Pattern Alert</label>
+        <select id="setting-pattern" onchange="togglePattern(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Bot Balance</label>
+        <select id="setting-botbal" onchange="toggleBotBal(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show AI Logic</label>
+        <select id="setting-ailogic" onchange="toggleAILogic(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Compact Mode</label>
+        <select id="setting-compact" onchange="toggleCompact(this.value)">
+          <option value="off">Off</option>
+          <option value="on">On</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Bet Input Size</label>
+        <select id="setting-betsize" onchange="toggleBetSize(this.value)">
+          <option value="normal">Normal</option>
+          <option value="large">Large</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Choice Spacing</label>
+        <select id="setting-spacing" onchange="toggleSpacing(this.value)">
+          <option value="normal">Normal</option>
+          <option value="tight">Tight</option>
+          <option value="wide">Wide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Score</label>
+        <select id="setting-score" onchange="toggleScore(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Chat Font Size</label>
+        <select id="setting-chatfont" onchange="toggleChatFont(this.value)">
+          <option value="small">Small</option>
+          <option value="medium" selected="">Medium</option>
+          <option value="large">Large</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Anim Speed</label>
+        <select id="setting-animspeed" onchange="toggleAnimSpeed(this.value)">
+          <option value="slow">Slow</option>
+          <option value="normal">Normal</option>
+          <option value="fast">Fast</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Choice Shape</label>
+        <select id="setting-shape" onchange="toggleShape(this.value)">
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
+          <option value="rounded">Rounded</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Gradient Style</label>
+        <select id="setting-gradient" onchange="toggleGradient(this.value)">
+          <option value="normal">Normal</option>
+          <option value="intense">Intense</option>
+          <option value="subtle">Subtle</option>
+          <option value="flat">Flat</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Show Fortune Wheel</label>
+        <select id="setting-wheel" onchange="toggleWheel(this.value)">
+          <option value="auto">Auto</option>
+          <option value="always">Always Show</option>
+          <option value="never">Never</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Difficulty Badge</label>
+        <select id="setting-diffbadge" onchange="toggleDiffBadge(this.value)">
+          <option value="show">Show</option>
+          <option value="hide">Hide</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Color Scheme</label>
+        <select id="setting-colorscheme" onchange="toggleColorScheme(this.value)">
+          <option value="blue" selected="">Blue</option>
+          <option value="purple">Purple</option>
+          <option value="green">Green</option>
+          <option value="red">Red</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label>Spam RPS</label>
+        <select id="setting-spam" onchange="toggleSpam(this.value)">
+          <option value="off" selected="">Off</option>
+          <option value="on">On</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label style="color: #ff0000;">True Destruction</label>
+        <button onclick="activateTrueDestruction()" style="width:100%;padding:0.5rem;background:#ff0000;color:#fff;border:none;border-radius:5px;cursor:pointer;">ACTIVATE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cheat-menu" id="cheat-menu">
+    <h2>🔓 CHEAT MENU</h2>
+    <div class="cheat-toggle">
+      <label>Always Win</label>
+      <input type="checkbox" id="cheat-always-win">
+    </div>
+    <div class="cheat-toggle">
+      <label>4x Chip Rewards</label>
+      <input type="checkbox" id="cheat-4x-rewards">
+    </div>
+    <div class="cheat-toggle">
+      <label>Future Vision (See AI Choice)</label>
+      <input type="checkbox" id="cheat-future-vision">
+    </div>
+    <div class="cheat-toggle">
+      <label>Infinite Chips</label>
+      <input type="checkbox" id="cheat-infinite-chips">
+    </div>
+    <div class="cheat-toggle">
+      <label>No Bet Required</label>
+      <input type="checkbox" id="cheat-no-bet">
+    </div>
+    <div class="cheat-toggle">
+      <label>Show AI Logic</label>
+      <input type="checkbox" id="cheat-show-logic">
+    </div>
+    <div class="cheat-toggle">
+      <label>Instant Streak (Start with 3)</label>
+      <input type="checkbox" id="cheat-instant-streak">
+    </div>
+    <div class="cheat-toggle" id="kill-ai-toggle" style="display:none;">
+      <label style="color:#ffd700;font-weight:bold;">KILL AI &amp; WIN GAME</label>
+      <input type="checkbox" id="cheat-kill-ai">
+    </div>
+    <div class="cheat-hint">Press C to toggle</div>
+  </div>
+
+  <script>
+    const choices = ['rock', 'paper', 'scissors'];
+    const emojis = { rock: '✊', paper: '✋', scissors: '✌️' };
+    const wins = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+    const loses = { rock: 'paper', paper: 'scissors', scissors: 'rock' };
+    let chips = 2000;
+    let botChips = 2500000;
+    let playerScore = 0;
+    let cpuScore = 0;
+    let difficulty = 'easy';
+    let playerHistory = [];
+    let botHistory = [];
+    let gameCount = 0;
+    let winStreak = 0;
+    let loseStreak = 0;
+    let achievementUnlocked = false;
+    let extremeAchievementUnlocked = false;
+    let allDifficultiesBeaten = false;
+    let beatenDifficulties = new Set();
+    let gameWon = false;
+    const streakMultipliers = { easy: 3, medium: 8, hard: 12, extreme: 35 };
+    const botStartingChips = { easy: 2500000, medium: 3000000, hard: 5000000, extreme: 12000000 };
+    let cheats = { alwaysWin: false, fourXRewards: false, futureVision: false, infiniteChips: false, noBet: false, showLogic: false, instantStreak: false, killAI: false };
+    let keybinds = { rock: '', paper: '', scissors: '' };
+    let cheatCpuChoice = null;
+    let extremeWinChance = 1;
+    let extremeBoosted = false;
+    let trueDestruction = false;
+    let wheelUnlocked = false;
+    let wheelTimer = null;
+    let wheelSeconds = 300;
+    let wheelSpun = false;
+    const wheelOptions = [
+      { name: 'LOSE 50K', value: -50000, color: '#e94560' },
+      { name: '20K', value: 20000, color: '#00d4ff' },
+      { name: '50K', value: 50000, color: '#00d4ff' },
+      { name: 'WIN!', value: 'immediate', color: '#ffd700', chance: 1/2000000000 },
+      { name: '100K', value: 100000, color: '#00d4ff' }
+    ];
+    let chatOpen = false;
+    let peekActive = false;
+    let pendingPeek = false;
+    let pendingPeekChoice = null;
+    let jackpotEnabled = false;
+    let jackpotTimer = null;
+    let selectedCrate = 'common';
+    let inventory = {};
+    const cratePrices = { common: 2000, uncommon: 5000, rare: 15000, epic: 50000, legendary: 80000, mythic: 150000 };
+    
+    const elements = [
+      { sym: 'H', name: 'Hydrogen', val: 1 }, { sym: 'He', name: 'Helium', val: 2 }, { sym: 'Li', name: 'Lithium', val: 3 }, { sym: 'Be', name: 'Beryllium', val: 4 }, { sym: 'B', name: 'Boron', val: 5 }, { sym: 'C', name: 'Carbon', val: 6 }, { sym: 'N', name: 'Nitrogen', val: 7 }, { sym: 'O', name: 'Oxygen', val: 8 }, { sym: 'F', name: 'Fluorine', val: 9 }, { sym: 'Ne', name: 'Neon', val: 10 },
+      { sym: 'Na', name: 'Sodium', val: 11 }, { sym: 'Mg', name: 'Magnesium', val: 12 }, { sym: 'Al', name: 'Aluminum', val: 13 }, { sym: 'Si', name: 'Silicon', val: 14 }, { sym: 'P', name: 'Phosphorus', val: 15 }, { sym: 'S', name: 'Sulfur', val: 16 }, { sym: 'Cl', name: 'Chlorine', val: 17 }, { sym: 'Ar', name: 'Argon', val: 18 }, { sym: 'K', name: 'Potassium', val: 19 }, { sym: 'Ca', name: 'Calcium', val: 20 },
+      { sym: 'Sc', name: 'Scandium', val: 21 }, { sym: 'Ti', name: 'Titanium', val: 22 }, { sym: 'V', name: 'Vanadium', val: 23 }, { sym: 'Cr', name: 'Chromium', val: 24 }, { sym: 'Mn', name: 'Manganese', val: 25 }, { sym: 'Fe', name: 'Iron', val: 26 }, { sym: 'Co', name: 'Cobalt', val: 27 }, { sym: 'Ni', name: 'Nickel', val: 28 }, { sym: 'Cu', name: 'Copper', val: 29 }, { sym: 'Zn', name: 'Zinc', val: 30 },
+      { sym: 'Ga', name: 'Gallium', val: 31 }, { sym: 'Ge', name: 'Germanium', val: 32 }, { sym: 'As', name: 'Arsenic', val: 33 }, { sym: 'Se', name: 'Selenium', val: 34 }, { sym: 'Br', name: 'Bromine', val: 35 }, { sym: 'Kr', name: 'Krypton', val: 36 }, { sym: 'Rb', name: 'Rubidium', val: 37 }, { sym: 'Sr', name: 'Strontium', val: 38 }, { sym: 'Y', name: 'Yttrium', val: 39 }, { sym: 'Zr', name: 'Zirconium', val: 40 },
+      { sym: 'Nb', name: 'Niobium', val: 41 }, { sym: 'Mo', name: 'Molybdenum', val: 42 }, { sym: 'Tc', name: 'Technetium', val: 43 }, { sym: 'Ru', name: 'Ruthenium', val: 44 }, { sym: 'Rh', name: 'Rhodium', val: 45 }, { sym: 'Pd', name: 'Palladium', val: 46 }, { sym: 'Ag', name: 'Silver', val: 47 }, { sym: 'Cd', name: 'Cadmium', val: 48 }, { sym: 'In', name: 'Indium', val: 49 }, { sym: 'Sn', name: 'Tin', val: 50 },
+      { sym: 'Sb', name: 'Antimony', val: 51 }, { sym: 'Te', name: 'Tellurium', val: 52 }, { sym: 'I', name: 'Iodine', val: 53 }, { sym: 'Xe', name: 'Xenon', val: 54 }, { sym: 'Cs', name: 'Cesium', val: 55 }, { sym: 'Ba', name: 'Barium', val: 56 }, { sym: 'La', name: 'Lanthanum', val: 57 }, { sym: 'Ce', name: 'Cerium', val: 58 }, { sym: 'Pr', name: 'Praseodymium', val: 59 }, { sym: 'Nd', name: 'Neodymium', val: 60 },
+      { sym: 'Pm', name: 'Promethium', val: 61 }, { sym: 'Sm', name: 'Samarium', val: 62 }, { sym: 'Eu', name: 'Europium', val: 63 }, { sym: 'Gd', name: 'Gadolinium', val: 64 }, { sym: 'Tb', name: 'Terbium', val: 65 }, { sym: 'Dy', name: 'Dysprosium', val: 66 }, { sym: 'Ho', name: 'Holmium', val: 67 }, { sym: 'Er', name: 'Erbium', val: 68 }, { sym: 'Tm', name: 'Thulium', val: 69 }, { sym: 'Yb', name: 'Ytterbium', val: 70 },
+      { sym: 'Lu', name: 'Lutetium', val: 71 }, { sym: 'Hf', name: 'Hafnium', val: 72 }, { sym: 'Ta', name: 'Tantalum', val: 73 }, { sym: 'W', name: 'Tungsten', val: 74 }, { sym: 'Re', name: 'Rhenium', val: 75 }, { sym: 'Os', name: 'Osmium', val: 76 }, { sym: 'Ir', name: 'Iridium', val: 77 }, { sym: 'Pt', name: 'Platinum', val: 78 }, { sym: 'Au', name: 'Gold', val: 79 }, { sym: 'Hg', name: 'Mercury', val: 80 },
+      { sym: 'Tl', name: 'Thallium', val: 81 }, { sym: 'Pb', name: 'Lead', val: 82 }, { sym: 'Bi', name: 'Bismuth', val: 83 }, { sym: 'Po', name: 'Polonium', val: 84 }, { sym: 'At', name: 'Astatine', val: 85 }, { sym: 'Rn', name: 'Radon', val: 86 }, { sym: 'Fr', name: 'Francium', val: 87 }, { sym: 'Ra', name: 'Radium', val: 88 }, { sym: 'Ac', name: 'Actinium', val: 89 }, { sym: 'Th', name: 'Thorium', val: 90 },
+      { sym: 'Pa', name: 'Protactinium', val: 91 }, { sym: 'U', name: 'Uranium', val: 92 }, { sym: 'Np', name: 'Neptunium', val: 93 }, { sym: 'Pu', name: 'Plutonium', val: 94 }, { sym: 'Am', name: 'Americium', val: 95 }, { sym: 'Cm', name: 'Curium', val: 96 }, { sym: 'Bk', name: 'Berkelium', val: 97 }, { sym: 'Cf', name: 'Californium', val: 98 }, { sym: 'Es', name: 'Einsteinium', val: 99 }, { sym: 'Fm', name: 'Fermium', val: 100 },
+      { sym: 'Md', name: 'Mendelevium', val: 101 }, { sym: 'No', name: 'Nobelium', val: 102 }, { sym: 'Lr', name: 'Lawrencium', val: 103 }, { sym: 'Rf', name: 'Rutherfordium', val: 104 }, { sym: 'Db', name: 'Dubnium', val: 105 }, { sym: 'Sg', name: 'Seaborgium', val: 106 }, { sym: 'Bh', name: 'Bohrium', val: 107 }, { sym: 'Hs', name: 'Hassium', val: 108 }, { sym: 'Mt', name: 'Meitnerium', val: 109 }, { sym: 'Ds', name: 'Darmstadtium', val: 110 },
+      { sym: 'Rg', name: 'Roentgenium', val: 111 }, { sym: 'Cn', name: 'Copernicium', val: 112 }, { sym: 'Nh', name: 'Nihonium', val: 113 }, { sym: 'Fl', name: 'Flerovium', val: 114 }, { sym: 'Mc', name: 'Moscovium', val: 115 }, { sym: 'Lv', name: 'Livermorium', val: 116 }, { sym: 'Ts', name: 'Tennessine', val: 117 }, { sym: 'Og', name: 'Oganesson', val: 118 }
+    ];
+    
+    const getElementEmoji = (num) => {
+      const colors = ['⚪','🟡','🟠','🔴','🟣','🔵','🟢','⚫','⚪','⚪'];
+      return colors[num % colors.length];
+    };
+    
+    const getRarity = (num) => {
+      if (num <= 10) return 'mythic';
+      if (num <= 30) return 'legendary';
+      if (num <= 60) return 'epic';
+      if (num <= 90) return 'rare';
+      if (num <= 118) return 'common';
+      return 'common';
+    };
+    
+    const getValue = (num, rarity) => {
+      if (rarity === 'mythic') return 0;
+      if (rarity === 'legendary') return Math.floor(num * 30000 + 50000);
+      if (rarity === 'epic') return Math.floor(num * 900 + 500);
+      if (rarity === 'rare') return Math.floor(num * 90 + 300);
+      if (rarity === 'uncommon') return Math.floor(num * 10 + 100);
+      return Math.floor(num * 5 + 50);
+    };
+    
+    const lootTable = {
+      common: elements.slice(90).map(e => ({ name: e.name, emoji: getElementEmoji(e.val), rarity: 'common', chance: 0.14, value: getValue(e.val, 'common') })).slice(0, 28),
+      uncommon: elements.slice(60, 90).map(e => ({ name: e.name, emoji: getElementEmoji(e.val), rarity: 'uncommon', chance: 0.2, value: getValue(e.val, 'uncommon') })),
+      rare: elements.slice(30, 60).map(e => ({ name: e.name, emoji: getElementEmoji(e.val), rarity: 'rare', chance: 0.2, value: getValue(e.val, 'rare') })),
+      epic: elements.slice(15, 30).map(e => ({ name: e.name, emoji: getElementEmoji(e.val), rarity: 'epic', chance: 0.2, value: getValue(e.val, 'epic') })),
+      legendary: elements.slice(1, 15).map(e => ({ name: e.name, emoji: getElementEmoji(e.val), rarity: 'legendary', chance: 0.13, value: getValue(e.val, 'legendary') })),
+      mythic: [
+        { name: 'Hydrogen', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 10000 },
+        { name: 'Helium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 12000 },
+        { name: 'Carbon', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 15000 },
+        { name: 'Nitrogen', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 18000 },
+        { name: 'Oxygen', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 20000 },
+        { name: 'Sodium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 22000 },
+        { name: 'Magnesium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 25000 },
+        { name: 'Aluminum', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 28000 },
+        { name: 'Silicon', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 30000 },
+        { name: 'Phosphorus', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 32000 },
+        { name: 'Sulfur', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 35000 },
+        { name: 'Potassium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 38000 },
+        { name: 'Calcium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 40000 },
+        { name: 'Iron', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 45000 },
+        { name: 'Copper', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 50000 },
+        { name: 'Zinc', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 55000 },
+        { name: 'Silver', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 60000 },
+        { name: 'Iodine', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 65000 },
+        { name: 'Gold', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 75000 },
+        { name: 'Mercury', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 80000 },
+        { name: 'Lead', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 85000 },
+        { name: 'Platinum', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 100000 },
+        { name: 'Tungsten', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 120000 },
+        { name: 'Francium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 150000 },
+        { name: 'Radium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 180000 },
+        { name: 'Actinium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Thorium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 220000 },
+        { name: 'Protactinium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 250000 },
+        { name: 'Neptunium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 280000 },
+        { name: 'Plutonium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 300000 },
+        { name: 'Americium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 320000 },
+        { name: 'Curium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 350000 },
+        { name: 'Berkelium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 380000 },
+        { name: 'Californium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 400000 },
+        { name: 'Einsteinium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 420000 },
+        { name: 'Fermium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 440000 },
+        { name: 'Mendelevium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 460000 },
+        { name: 'Nobelium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 480000 },
+        { name: 'Lawrencium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 500000 },
+        { name: 'Rutherfordium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Dubnium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Seaborgium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Bohrium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Hassium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Meitnerium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Darmstadtium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Roentgenium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Copernicium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Nihonium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Flerovium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Moscovium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Livermorium', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Tennessine', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'Oganesson', emoji: '⚛️', rarity: 'mythic', chance: 0.018, value: 200000 },
+        { name: 'The Absolute Hidden Gem', emoji: '💎✨', rarity: 'mythic', chance: 0.0000000001, value: 5000000000, rare: true },
+        { name: 'Lucky Don Julio', emoji: '🥃', rarity: 'mythic', chance: 0.0000000001, value: 1000000000000, rare: true }
+      ]
+    };
+
+    const taunts = {
+      mild: [
+        "You're getting lucky...",
+        "Beginner's luck.",
+        "Hmph. That was nothing.",
+        "Not bad for a human.",
+        "Don't get too comfortable."
+      ],
+      serious: [
+        "Is that all you've got?!",
+        "You're pathetic!",
+        "DELETE YOUR ACCOUNT!",
+        "I am ERROR. You are NOTHING.",
+        "Your grandmother plays better!",
+        "Q W P O I U Y T R E W Q!!!",
+        "sudo rm -rf /your dignity"
+      ],
+      desperate: [
+        "NO! IMPOSSIBLE!",
+        "HACKER! YOU MUST BE HACKING!",
+        "THIS CANNOT BE!",
+        "MY CALCULATIONS WERE PERFECT!",
+        "I... I WILL NOT ACCEPT THIS!"
+      ]
+    };
+
+    const quests = [
+      { id: 'win3', name: 'Win 3x in a row', reward: 5000, check: () => winStreak >= 3 },
+      { id: 'win5', name: 'Win 5x in a row', reward: 15000, check: () => winStreak >= 5 },
+      { id: 'win10', name: 'Win 10x in a row', reward: 100000, check: () => winStreak >= 10 },
+      { id: 'bet100k', name: 'Bet 100,000 chips', reward: 10000, check: () => lastBet >= 100000 },
+      { id: 'bet250k', name: 'Bet 250,000 chips', reward: 50000, check: () => lastBet >= 250000 },
+      { id: 'beatEasy', name: 'Bankrupt Easy Bot', reward: 2500000, check: () => difficulty === 'easy' && achievementUnlocked },
+      { id: 'beatMedium', name: 'Bankrupt Medium Bot', reward: 5000000, check: () => difficulty === 'medium' && achievementUnlocked },
+      { id: 'beatHard', name: 'Bankrupt Hard Bot', reward: 10000000, check: () => difficulty === 'hard' && achievementUnlocked },
+      { id: 'beatExtreme', name: 'Bankrupt Extreme Bot', reward: 50000000, check: () => difficulty === 'extreme' && achievementUnlocked },
+      { id: 'rich', name: 'Reach 1,000,000 chips', reward: 100000, check: () => chips >= 1000000 },
+      { id: 'millionaire', name: 'Reach 10,000,000 chips', reward: 1000000, check: () => chips >= 10000000 },
+    ];
+    let completedQuests = new Set();
+    let lastBet = 0;
+    let questRewardsClaimed = {};
+
+    function toggleAddChips() {
+      document.getElementById('add-chips-dropdown').classList.toggle('show');
+    }
+
+    function addCustomChips() {
+      const amount = parseInt(document.getElementById('custom-chip-amount').value);
+      if (amount > 0) {
+        chips += amount;
+        document.getElementById('chips').textContent = chips.toLocaleString();
+        document.getElementById('custom-chip-amount').value = '';
+        document.getElementById('add-chips-dropdown').classList.remove('show');
+        if (chips > 0) {
+          document.querySelectorAll('.choice').forEach(c => c.disabled = false);
+      document.getElementById('game-over').style.display = 'none';
+      document.getElementById('chat-messages').innerHTML = '';
+      document.getElementById('peek-display').classList.remove('show');
+        }
+      }
+    }
+
+    function tryLucky() {
+      const roll = Math.floor(Math.random() * 300) + 1;
+      if (roll === 1) {
+        chips += 2000000;
+        document.getElementById('chips').textContent = chips.toLocaleString();
+        document.getElementById('lucky-message').style.display = 'block';
+        checkQuests();
+        setTimeout(() => {
+          document.getElementById('lucky-message').style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    function handleChat(e) {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('chat-input');
+        const cmd = input.value.trim();
+        processCommand(cmd);
+        input.value = '';
+      }
+    }
+
+    function processCommand(cmd) {
+      const chatMsg = document.getElementById('chat-messages');
+      let cmdExecuted = false;
+      
+      const commands = {
+        'help': () => { 
+          addChatMsg('🔧 CONSOLE COMMANDS:', 'info');
+          addChatMsg('botbalance="amt" Set bot bal', 'info');
+          addChatMsg('addchips="amt" Add chips', 'info');
+          addChatMsg('iwantcookies Peek 1/6', 'info');
+          addChatMsg('iw4va Bankrupt bot', 'info');
+          addChatMsg('freemoney +1M chips', 'info');
+          addChatMsg('godmode/nogod Toggle win', 'info');
+          addChatMsg('jackpotmode 10s jackpot', 'info');
+          addChatMsg('alwaysjackpot Extreme jackpot', 'info');
+          addChatMsg('ez/hard/insane Set diff', 'info');
+          cmdExecuted = true; 
+        },
+        'botbalance': () => {
+          const m = cmd.match(/botbalance=(\d+)/);
+          if (m) { botChips = parseInt(m[1]); document.getElementById('bot-chips').textContent = botChips.toLocaleString(); addChatMsg(`Bot balance set to ${botChips.toLocaleString()}`, 'success'); cmdExecuted = true; }
+        },
+        'addchips': () => {
+          const m = cmd.match(/addchips=(\d+)/);
+          if (m) { chips += parseInt(m[1]); document.getElementById('chips').textContent = chips.toLocaleString(); addChatMsg(`Added ${parseInt(m[1]).toLocaleString()} chips!`, 'success'); checkQuests(); cmdExecuted = true; }
+        },
+        'iwantcookies': () => {
+          if (getCryptoRandom() % 6 === 0) { pendingPeek = true; addChatMsg('🍪 Cookie activated! Peek next hand!', 'success'); } 
+          else { addChatMsg('🍪 No cookie this time...', 'error'); }
+          cmdExecuted = true;
+        },
+        'iw4va': () => { botChips = 0; document.getElementById('bot-chips').textContent = '0'; checkWheelUnlock(); addChatMsg('💀 IW4VA! Bot bankrupted!', 'success'); cmdExecuted = true; },
+        'freemoney': () => { chips += 1000000; document.getElementById('chips').textContent = chips.toLocaleString(); addChatMsg('💰 +1,000,000 chips!', 'success'); checkQuests(); cmdExecuted = true; },
+        'godmode': () => { cheats.alwaysWin = true; document.getElementById('cheat-always-win').checked = true; addChatMsg('👑 God mode enabled!', 'success'); cmdExecuted = true; },
+        'nogod': () => { cheats.alwaysWin = false; document.getElementById('cheat-always-win').checked = false; addChatMsg('👑 God mode disabled.', 'info'); cmdExecuted = true; },
+        'infmoney': () => { cheats.infiniteChips = true; document.getElementById('cheat-infinite-chips').checked = true; addChatMsg('♾️ Infinite chips enabled!', 'success'); cmdExecuted = true; },
+        'nofreemoney': () => { cheats.infiniteChips = false; document.getElementById('cheat-infinite-chips').checked = false; addChatMsg('♾️ Infinite chips disabled.', 'info'); cmdExecuted = true; },
+        'noskip': () => { cheats.noBet = true; document.getElementById('cheat-no-bet').checked = true; addChatMsg('🎰 No bet mode enabled!', 'success'); cmdExecuted = true; },
+        'paytoplay': () => { cheats.noBet = false; document.getElementById('cheat-no-bet').checked = false; addChatMsg('🎰 Bet required again.', 'info'); cmdExecuted = true; },
+        'streak': () => { winStreak = 10; addChatMsg('🔥 10 win streak activated!', 'success'); cmdExecuted = true; },
+        'streakreset': () => { winStreak = 0; addChatMsg('🔥 Streak reset.', 'info'); cmdExecuted = true; },
+        'ezmode': () => { difficulty = 'easy'; document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active')); document.querySelector('[data-diff="easy"]').classList.add('active'); botChips = botStartingChips.easy; document.getElementById('bot-chips').textContent = botChips.toLocaleString(); addChatMsg('🎮 Easy mode set!', 'success'); cmdExecuted = true; },
+        'hardmode': () => { difficulty = 'hard'; document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active')); document.querySelector('[data-diff="hard"]').classList.add('active'); botChips = botStartingChips.hard; document.getElementById('bot-chips').textContent = botChips.toLocaleString(); addChatMsg('🎮 Hard mode set!', 'success'); cmdExecuted = true; },
+        'insane': () => { difficulty = 'extreme'; document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active')); document.querySelector('[data-diff="extreme"]').classList.add('active'); botChips = botStartingChips.extreme; document.getElementById('bot-chips').textContent = botChips.toLocaleString(); addChatMsg('🎮 EXTREME mode! Good luck...', 'success'); cmdExecuted = true; },
+        'seeall': () => { cheats.futureVision = true; document.getElementById('cheat-future-vision').checked = true; addChatMsg('🔮 Future vision enabled!', 'success'); cmdExecuted = true; },
+        'blind': () => { cheats.futureVision = false; document.getElementById('cheat-future-vision').checked = false; addChatMsg('🔮 Future vision disabled.', 'info'); cmdExecuted = true; },
+        'showlogic': () => { cheats.showLogic = true; document.getElementById('cheat-show-logic').checked = true; addChatMsg('🧠 AI logic visible!', 'success'); cmdExecuted = true; },
+        'hidelogic': () => { cheats.showLogic = false; document.getElementById('cheat-show-logic').checked = false; addChatMsg('🧠 AI logic hidden.', 'info'); cmdExecuted = true; },
+        'quadruple': () => { cheats.fourXRewards = true; document.getElementById('cheat-4x-rewards').checked = true; addChatMsg('💎 4x rewards enabled!', 'success'); cmdExecuted = true; },
+        'normalrewards': () => { cheats.fourXRewards = false; document.getElementById('cheat-4x-rewards').checked = false; addChatMsg('💎 4x rewards disabled.', 'info'); cmdExecuted = true; },
+        'bigbet': () => { document.getElementById('bet-amount').value = 250000; addChatMsg('💰 Bet set to 250,000!', 'success'); cmdExecuted = true; },
+        'smallbet': () => { document.getElementById('bet-amount').value = 100; addChatMsg('💰 Bet set to 100!', 'info'); cmdExecuted = true; },
+        'allin': () => { document.getElementById('bet-amount').value = Math.min(chips, 250000); addChatMsg('💰 All in!', 'success'); cmdExecuted = true; },
+        'maxwin': () => { difficulty = 'extreme'; extremeBoosted = true; addChatMsg('⚡ Max win chance enabled!', 'success'); cmdExecuted = true; },
+        'jackpotmode': () => { 
+          jackpotEnabled = true; 
+          if (jackpotTimer) clearTimeout(jackpotTimer);
+          jackpotTimer = setTimeout(() => { jackpotEnabled = false; addChatMsg('🌟 Jackpot mode ended.', 'info'); }, 10000);
+          addChatMsg('🌟 Jackpot mode enabled for 10 seconds!', 'success'); 
+          cmdExecuted = true; 
+        },
+        'alwaysjackpot': () => { 
+          jackpotEnabled = true; 
+          if (jackpotTimer) clearTimeout(jackpotTimer);
+          addChatMsg('🌟 Always Jackpot enabled for Extreme!', 'success'); 
+          cmdExecuted = true; 
+        },
+        'killbot': () => { botChips = 0; document.getElementById('bot-chips').textContent = '0'; addChatMsg('💀 Bot killed!', 'success'); checkWheelUnlock(); cmdExecuted = true; },
+        'revivebot': () => { botChips = botStartingChips[difficulty]; document.getElementById('bot-chips').textContent = botChips.toLocaleString(); addChatMsg('💚 Bot revived!', 'info'); cmdExecuted = true; },
+        'score': () => { addChatMsg(`Score - You: ${playerScore} | Bot: ${cpuScore}`, 'info'); cmdExecuted = true; },
+        'bal': () => { addChatMsg(`Balance - You: ${chips.toLocaleString()} | Bot: ${botChips.toLocaleString()}`, 'info'); cmdExecuted = true; },
+        'debugopen': () => { toggleDebug(); cmdExecuted = true; },
+      };
+      
+      const key = cmd.toLowerCase().replace(/"/g, '');
+      if (commands[key]) { commands[key](); }
+      else if (cmd === '') { return; }
+      else { addChatMsg(`Unknown: ${cmd}`, 'error'); }
+      
+      if (cmdExecuted) {
+        setTimeout(() => closeChat(), 500);
+      }
+    }
+
+    function addChatMsg(text, type = '') {
+      const chatMsg = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + type;
+      div.textContent = '> ' + text;
+      chatMsg.appendChild(div);
+      chatMsg.scrollTop = chatMsg.scrollHeight;
+    }
+
+    function openHelp() {
+      const menu = document.getElementById('help-menu');
+      if (menu.classList.contains('show')) {
+        menu.classList.remove('show');
+      } else {
+        let basicHTML = '<p><code>help</code> - Show commands</p>';
+        basicHTML += '<p><code>hardmode</code> - Hard difficulty</p>';
+        basicHTML += '<p><code>insane</code> - Extreme difficulty</p>';
+        basicHTML += '<p><code>bigbet</code> / <code>smallbet</code> / <code>allin</code> - Bet presets</p>';
+        basicHTML += '<p><code>score</code> / <code>bal</code> - Check scores</p>';
+        basicHTML += '<p><code>debugopen</code> - Toggle debug panel</p>';
+        
+        let cheatHTML = '';
+        if (allDifficultiesBeaten) {
+          cheatHTML += '<p style="color:#ffd700;margin:0.5rem 0;">━━━ UNLOCKED CHEATS ━━━</p>';
+          cheatHTML += '<p><code>ezmode</code> - Easy difficulty</p>';
+          cheatHTML += '<p><code>botbalance=3892</code> - Set bot chips</p>';
+          cheatHTML += '<p><code>streak</code> - 10 win streak</p>';
+          cheatHTML += '<p><code>iwantcookies</code> - Peek bot choice (1/6)</p>';
+          cheatHTML += '<p><code>addchips=1000</code> - Add chips</p>';
+          cheatHTML += '<p><code>iw4va</code> - Bankrupt bot</p>';
+          cheatHTML += '<p><code>freemoney</code> - +1M chips</p>';
+          cheatHTML += '<p><code>godmode</code> / <code>nogod</code> - Always win</p>';
+          cheatHTML += '<p><code>infmoney</code> / <code>nofreemoney</code> - Infinite chips</p>';
+          cheatHTML += '<p><code>noskip</code> / <code>paytoplay</code> - No bet mode</p>';
+          cheatHTML += '<p><code>seeall</code> / <code>blind</code> - Future vision</p>';
+          cheatHTML += '<p><code>showlogic</code> / <code>hidelogic</code> - AI logic</p>';
+          cheatHTML += '<p><code>quadruple</code> / <code>normalrewards</code> - 4x rewards</p>';
+          cheatHTML += '<p><code>maxwin</code> - Max extreme win chance</p>';
+          cheatHTML += '<p><code>jackpotmode</code> - 10s jackpot every win</p>';
+          cheatHTML += '<p><code>alwaysjackpot</code> - Always jackpot on Extreme</p>';
+          cheatHTML += '<p><code>killbot</code> / <code>revivebot</code> - Bot state</p>';
+        }
+        
+        document.getElementById('help-basic-commands').innerHTML = basicHTML;
+        document.getElementById('help-locked-commands').innerHTML = cheatHTML;
+        document.getElementById('help-locked-commands').style.display = allDifficultiesBeaten ? 'block' : 'none';
+        document.getElementById('help-debug-commands').style.display = allDifficultiesBeaten ? 'block' : 'none';
+        
+        menu.classList.add('show');
+      }
+    }
+
+    function closeHelp() {
+      document.getElementById('help-menu').classList.remove('show');
+    }
+
+    function closeChat() {
+      document.getElementById('chat-container').classList.remove('show');
+    }
+
+    function checkWheelUnlock() {
+      if (difficulty === 'extreme') return;
+      const halfBalance = botStartingChips[difficulty] / 2;
+      if (botChips <= halfBalance && !wheelUnlocked) {
+        wheelUnlocked = true;
+        wheelSeconds = 300;
+        wheelSpun = false;
+        startWheelTimer();
+        document.getElementById('result').textContent = '🎰 Fortune Wheel unlocked! Press / to spin!';
+        document.getElementById('wheel-unlock-text').textContent = 'UNLOCKED! Press / to spin';
+        document.getElementById('wheel-unlock-text').style.color = '#00ff00';
+      }
+    }
+
+    function startWheelTimer() {
+      if (wheelTimer) clearInterval(wheelTimer);
+      document.getElementById('timer-display').style.display = 'block';
+      wheelTimer = setInterval(() => {
+        wheelSeconds--;
+        const mins = Math.floor(wheelSeconds / 60);
+        const secs = wheelSeconds % 60;
+        document.getElementById('timer-display').textContent = `⏱️ ${mins}:${secs.toString().padStart(2, '0')}`;
+        if (wheelSeconds <= 0) {
+          clearInterval(wheelTimer);
+          wheelUnlocked = false;
+          document.getElementById('timer-display').style.display = 'none';
+        }
+      }, 1000);
+    }
+
+    function spinWheel() {
+      if (!wheelUnlocked || wheelSpun) return;
+      wheelSpun = true;
+      
+      const roll = getCryptoRandom() % 2000000000;
+      let resultIndex;
+      
+      if (roll === 0) {
+        resultIndex = 3;
+      } else {
+        const segments = [0, 1, 2, 4];
+        resultIndex = segments[getCryptoRandom() % 4];
+      }
+      
+      const degrees = resultIndex * 72 + 360 * 5 + getCryptoRandom() % 36;
+      document.getElementById('wheel').style.transform = `rotate(${degrees}deg)`;
+      
+      setTimeout(() => {
+        const prize = wheelOptions[resultIndex];
+        if (prize.value === 'immediate') {
+          const currentBet = lastBet || 100;
+          const winChoice = wins[playerHistory[playerHistory.length - 1]] || 'rock';
+          const botChoice = loses[winChoice];
+          playerHistory.push(winChoice);
+          botHistory.push(botChoice);
+          chips += currentBet * 2;
+          botChips = Math.max(0, botChips - currentBet);
+          playerScore++;
+          winStreak++;
+          result = 'You win! (Fortune!)';
+        } else {
+          chips += prize.value;
+          if (chips < 0) chips = 0;
+        }
+        updateDisplay(playerHistory[playerHistory.length - 1], botHistory[botHistory.length - 1], result, '', 0, '');
+        document.getElementById('result').textContent += ` 🎰 Landed on ${prize.name}! ${prize.value > 0 ? '+' : ''}${prize.value.toLocaleString()} chips!`;
+        closeWheel();
+        checkQuests();
+      }, 4000);
+    }
+
+    function closeWheel() {
+      document.getElementById('wheel-menu').classList.remove('show');
+      document.getElementById('wheel').style.transform = 'rotate(0deg)';
+    }
+
+    function setBet(amount) {
+      const input = document.getElementById('bet-amount');
+      let current = parseInt(input.value || 0);
+      if (amount === 'all') {
+        input.value = Math.min(chips, 250000);
+      } else {
+        input.value = Math.min(current + amount, chips, 250000);
+      }
+    }
+
+    function showTaunt(type) {
+      let tauntList = type === 'serious' ? taunts.serious : (type === 'desperate' ? taunts.desperate : taunts.mild);
+      const taunt = tauntList[Math.floor(Math.random() * tauntList.length)];
+      document.getElementById('taunt').textContent = `Bot: "${taunt}"`;
+      setTimeout(() => {
+        if (!cheats.killAI) document.getElementById('taunt').textContent = '';
+      }, 3000);
+    }
+
+    function triggerTaunt() {
+      if (loseStreak >= 5) {
+        showTaunt('desperate');
+      } else if (loseStreak >= 3) {
+        showTaunt('serious');
+      } else if (Math.random() < 0.3 && loseStreak >= 1) {
+        showTaunt('mild');
+      }
+    }
+
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        difficulty = btn.dataset.diff;
+        botChips = botStartingChips[difficulty];
+        document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      });
+    });
+
+    document.querySelectorAll('.choice').forEach(choice => {
+      choice.addEventListener('click', () => play(choice.dataset.choice));
+    });
+
+    function getCryptoRandom() {
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      return arr[0];
+    }
+
+    function getRandomChoice() {
+      return choices[getCryptoRandom() % 3];
+    }
+
+    function getPlayerPattern() {
+      if (playerHistory.length < 3) return null;
+      const last3 = playerHistory.slice(-3);
+      if (last3[0] === last3[1] && last3[1] === last3[2]) {
+        return last3[0];
+      }
+      return null;
+    }
+
+    function getPredictedChoice() {
+      if (playerHistory.length < 2) return null;
+      const counts = { rock: 0, paper: 0, scissors: 0 };
+      playerHistory.forEach(c => counts[c]++);
+      const max = Math.max(counts.rock, counts.paper, counts.scissors);
+      const mostUsed = Object.keys(counts).find(c => counts[c] === max);
+      if (playerHistory.length >= 5 && max >= 3) return mostUsed;
+      return null;
+    }
+
+    function getCpuChoice() {
+      const pattern = getPlayerPattern();
+      const predicted = getPredictedChoice();
+      gameCount++;
+
+      if (difficulty === 'easy') return getRandomChoice();
+
+      if (difficulty === 'medium') {
+        if (pattern && getCryptoRandom() % 100 < 60) return loses[pattern];
+        if (predicted && getCryptoRandom() % 100 < 50) return loses[predicted];
+        return getRandomChoice();
+      }
+
+      if (difficulty === 'hard') {
+        if (pattern) {
+          const detectChance = 90 + Math.min(gameCount, 10);
+          if (getCryptoRandom() % 100 < detectChance) return loses[pattern];
+        }
+        if (predicted) {
+          const predictChance = 80 + Math.min(gameCount, 15);
+          if (getCryptoRandom() % 100 < predictChance) return loses[predicted];
+        }
+        return getRandomChoice();
+      }
+
+      if (difficulty === 'extreme' || trueDestruction) {
+        if (trueDestruction) {
+          if (getCryptoRandom() % 1000000000 < 999999999) {
+            if (pattern) return loses[pattern];
+            if (predicted) return loses[predicted];
+            return getRandomChoice();
+          }
+          return getRandomChoice();
+        }
+        if (getCryptoRandom() % 200 < 1) {
+          return playerChoice;
+        }
+        if (pattern) {
+          const detectChance = 99;
+          if (getCryptoRandom() % 100 < detectChance) return loses[pattern];
+        }
+        if (predicted) {
+          const predictChance = 97;
+          if (getCryptoRandom() % 100 < predictChance) return loses[predicted];
+        }
+        return getRandomChoice();
+      }
+
+      return getRandomChoice();
+    }
+
+    function play(playerChoice) {
+      if (gameWon) return;
+
+      const betAmount = cheats.noBet ? 0 : parseInt(document.getElementById('bet-amount').value);
+      lastBet = betAmount;
+      
+      if (pendingPeek) {
+        pendingPeek = false;
+        const peekChoice = getCpuChoice();
+        document.getElementById('peek-display').textContent = '🔮 Bot will play: ' + emojis[peekChoice];
+        document.getElementById('peek-display').classList.add('show');
+        setTimeout(() => {
+          document.getElementById('peek-display').classList.remove('show');
+        }, 1500);
+      }
+      
+      if (!cheats.noBet && (isNaN(betAmount) || betAmount <= 0)) {
+        document.getElementById('result').textContent = 'Please enter a valid bet amount!';
+        return;
+      }
+      if (!cheats.noBet && betAmount > 250000) {
+        document.getElementById('result').textContent = 'Max bet is 250,000!';
+        return;
+      }
+      if (!cheats.noBet && betAmount > chips && !cheats.infiniteChips) {
+        document.getElementById('result').textContent = 'Not enough chips!';
+        return;
+      }
+      if (chips <= 0 && !cheats.infiniteChips) {
+        document.getElementById('game-over').style.display = 'block';
+        return;
+      }
+
+      if (!cheats.noBet) chips -= betAmount;
+      playerHistory.push(playerChoice);
+      
+      let patternMsg = '';
+      let logicMsg = '';
+      const pattern = getPlayerPattern();
+      const predicted = getPredictedChoice();
+      
+      if (pattern) patternMsg = `⚠️ Pattern detected: ${pattern} x3!`;
+      if (cheats.showLogic) {
+        logicMsg = ` [AI: pattern=${pattern || 'none'}, predicted=${predicted || 'none'}]`;
+      }
+
+      let baseCpuChoice = getCpuChoice();
+      
+      if (cheats.killAI) {
+        cheatCpuChoice = wins[playerChoice];
+      } else if (cheats.alwaysWin) {
+        cheatCpuChoice = loses[baseCpuChoice];
+      } else {
+        cheatCpuChoice = baseCpuChoice;
+      }
+      botHistory.push(cheatCpuChoice);
+
+      let result = '';
+      let winAmount = 0;
+
+      if (playerChoice === cheatCpuChoice) {
+        result = "It's a tie! Bet returned.";
+        if (!cheats.noBet) chips += betAmount;
+        winStreak = 0;
+        loseStreak = 0;
+      } else if (wins[playerChoice] === cheatCpuChoice || cheats.killAI) {
+        result = cheats.killAI ? 'YOU DEFEATED THE AI!' : (cheats.alwaysWin ? 'You win! (CHEAT)' : 'You win!');
+        winStreak++;
+        if (cheats.instantStreak) winStreak = Math.max(winStreak, 3);
+        
+        if (difficulty === 'extreme' && (jackpotEnabled || getCryptoRandom() % 6000 === 0)) {
+          const bonus = 2500000;
+          chips += bonus;
+          result += ' 🌟 JACKPOT! +2,500,000 BONUS!';
+        }
+        
+        let multiplier = winStreak >= 3 ? streakMultipliers[difficulty] : 1;
+        if (cheats.fourXRewards && multiplier > 1) multiplier *= 4;
+        winAmount = betAmount * multiplier;
+        
+        if (!cheats.killAI) {
+          chips += betAmount + winAmount;
+          botChips = Math.max(0, botChips - winAmount);
+        }
+        playerScore++;
+        loseStreak = 0;
+        triggerTaunt();
+        checkWheelUnlock();
+      } else {
+        result = 'Bot wins!';
+        winStreak = 0;
+        loseStreak++;
+        if (!cheats.noBet) {
+          botChips += betAmount * 2;
+        }
+        cpuScore++;
+        triggerTaunt();
+      }
+
+      if (cheats.infiniteChips && chips < 0) chips = 2000;
+
+      if (botChips <= 0 && !achievementUnlocked) {
+        achievementUnlocked = true;
+        beatenDifficulties.add(difficulty);
+        if (difficulty === 'easy') {
+          document.getElementById('cheat-unlock-text').textContent = 'UNLOCKED! Press C';
+          document.getElementById('cheat-unlock-text').style.color = '#00ff00';
+        }
+        if (beatenDifficulties.size === 4) {
+          allDifficultiesBeaten = true;
+          document.getElementById('chips-unlock-text').textContent = 'UNLOCKED! Click + to add';
+          document.getElementById('chips-unlock-text').style.color = '#00ff00';
+          updateLockedCheats();
+        }
+        if (trueDestruction) {
+          chips += 250000000;
+          document.getElementById('achievement').textContent = '🏆 ABSOLUTE INSANITY! +250,000,000 CHIPS!';
+          document.getElementById('achievement').style.display = 'block';
+        } else if (difficulty === 'extreme' && !extremeAchievementUnlocked) {
+          extremeAchievementUnlocked = true;
+          document.getElementById('achievement').textContent = '🏆 ACHIEVEMENT UNLOCKED: IMPOSSIBLE MASTER!';
+          document.getElementById('achievement').style.display = 'block';
+        } else {
+          document.getElementById('achievement').textContent = '🏆 ACHIEVEMENT UNLOCKED: BANKRUPTCY MASTER!';
+          document.getElementById('achievement').style.display = 'block';
+        }
+        document.getElementById('kill-ai-toggle').style.display = 'flex';
+        document.getElementById('bot-chips').textContent = '0';
+        document.getElementById('chips').textContent = chips.toLocaleString();
+        gameWon = true;
+        document.querySelectorAll('.choice').forEach(c => c.disabled = true);
+        setTimeout(() => {
+          document.getElementById('achievement').style.display = 'none';
+        }, 5000);
+        return;
+      }
+
+      if (cheats.killAI && botChips <= 0) {
+        gameWon = true;
+        document.getElementById('victory').style.display = 'block';
+        document.querySelectorAll('.choice').forEach(c => c.disabled = true);
+        return;
+      }
+
+      if (cheats.futureVision && cheatCpuChoice) {
+        choices.forEach(c => {
+          const fv = document.getElementById('fv-' + c);
+          if (c === cheatCpuChoice) {
+            fv.textContent = 'Bot will pick: ' + emojis[c];
+            fv.classList.add('show');
+          } else {
+            fv.textContent = '';
+            fv.classList.remove('show');
+          }
+        });
+        setTimeout(() => {
+          choices.forEach(c => {
+            document.getElementById('fv-' + c).classList.remove('show');
+          });
+        }, 2000);
+      }
+
+      updateDisplay(playerChoice, cheatCpuChoice, result, patternMsg, winAmount, logicMsg);
+      checkQuests();
+    }
+
+    function updateDisplay(player, cpu, result, patternMsg, winAmount, logicMsg = '') {
+      document.getElementById('chips').textContent = chips.toLocaleString();
+      document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      document.getElementById('player-score').textContent = playerScore;
+      document.getElementById('cpu-score').textContent = cpuScore;
+      
+      let displayResult = `${emojis[player]} vs ${emojis[cpu]} — ${result}`;
+      if (winAmount > 0) {
+        const multiplier = winStreak >= 3 ? streakMultipliers[difficulty] : 1;
+        if (multiplier > 1) {
+          displayResult += ` (+${winAmount.toLocaleString()} chips, ${multiplier}x streak!)`;
+        } else {
+          displayResult += ` (+${winAmount.toLocaleString()} chips)`;
+        }
+      }
+      if (winStreak >= 2) {
+        displayResult += ` 🔥${winStreak}`;
+      }
+      displayResult += logicMsg;
+      document.getElementById('result').textContent = displayResult;
+      document.getElementById('pattern').textContent = patternMsg;
+      document.getElementById('history').textContent = `History: ${playerHistory.slice(-10).join(', ')}`;
+
+      if (chips <= 0 && !cheats.infiniteChips) {
+        document.getElementById('game-over').style.display = 'block';
+        document.querySelectorAll('.choice').forEach(c => c.disabled = true);
+      }
+    }
+
+    function resetGame() {
+      chips = 2000;
+      botChips = botStartingChips[difficulty];
+      playerScore = 0;
+      cpuScore = 0;
+      playerHistory = [];
+      botHistory = [];
+      gameCount = 0;
+      winStreak = 0;
+      loseStreak = 0;
+      achievementUnlocked = false;
+      extremeAchievementUnlocked = false;
+      gameWon = false;
+      extremeBoosted = false;
+      trueDestruction = false;
+      peekActive = false;
+      pendingPeek = false;
+      cheatCpuChoice = null;
+      if (wheelTimer) clearInterval(wheelTimer);
+      wheelUnlocked = false;
+      wheelSpun = false;
+      wheelSeconds = 300;
+      document.getElementById('timer-display').style.display = 'none';
+      choices.forEach(c => document.getElementById('fv-' + c).classList.remove('show'));
+      document.getElementById('chips').textContent = '2000';
+      document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      document.getElementById('player-score').textContent = 0;
+      document.getElementById('cpu-score').textContent = 0;
+      document.getElementById('bet-amount').value = 100;
+      document.getElementById('result').textContent = 'Place your bet and choose your weapon!';
+      document.getElementById('pattern').textContent = '';
+      document.getElementById('taunt').textContent = '';
+      document.getElementById('history').textContent = '';
+      document.getElementById('game-over').style.display = 'none';
+      document.getElementById('victory').style.display = 'none';
+      document.getElementById('kill-ai-toggle').style.display = 'none';
+      document.getElementById('cheat-kill-ai').checked = false;
+      cheats.killAI = false;
+      completedQuests.clear();
+      questRewardsClaimed = {};
+      renderQuests();
+      document.querySelectorAll('.choice').forEach(c => c.disabled = false);
+      if (spamEnabled) {
+        toggleSpam('off');
+        document.getElementById('setting-spam').value = 'off';
+        document.getElementById('keybind-rock').textContent = '';
+        document.getElementById('keybind-paper').textContent = '';
+        document.getElementById('keybind-scissors').textContent = '';
+      }
+    }
+
+    function renderQuests() {
+      const list = document.getElementById('quest-list');
+      list.innerHTML = '';
+      quests.forEach(quest => {
+        const div = document.createElement('div');
+        div.className = 'quest-item' + (completedQuests.has(quest.id) ? ' completed' : '');
+        const progress = getQuestProgress(quest);
+        div.innerHTML = `
+          <div class="quest-name">${quest.name}</div>
+          <div class="quest-reward">Reward: ${quest.reward.toLocaleString()} chips</div>
+          ${progress !== null && !completedQuests.has(quest.id) ? `<div class="quest-progress">Progress: ${progress}</div>` : ''}
+        `;
+        if (completedQuests.has(quest.id)) {
+          div.style.background = 'rgba(0,255,0,0.1)';
+        }
+        list.appendChild(div);
+      });
+    }
+
+    function getQuestProgress(quest) {
+      if (quest.id === 'win3') return winStreak + '/3';
+      if (quest.id === 'win5') return winStreak + '/5';
+      if (quest.id === 'win10') return winStreak + '/10';
+      if (quest.id === 'bet100k') return lastBet >= 100000 ? 'Done!' : lastBet + '/100,000';
+      if (quest.id === 'bet250k') return lastBet >= 250000 ? 'Done!' : lastBet + '/250,000';
+      if (quest.id === 'beatEasy') return 'Not completed';
+      if (quest.id === 'beatMedium') return 'Not completed';
+      if (quest.id === 'beatHard') return 'Not completed';
+      if (quest.id === 'beatExtreme') return 'Not completed';
+      if (quest.id === 'rich') return chips >= 1000000 ? 'Done!' : chips + '/1,000,000';
+      if (quest.id === 'millionaire') return chips >= 10000000 ? 'Done!' : chips + '/10,000,000';
+      return null;
+    }
+
+    function checkQuests() {
+      quests.forEach(quest => {
+        if (!completedQuests.has(quest.id) && quest.check()) {
+          completedQuests.add(quest.id);
+          if (!questRewardsClaimed[quest.id]) {
+            questRewardsClaimed[quest.id] = true;
+            chips += quest.reward;
+            document.getElementById('result').textContent += ` (Quest complete: +${quest.reward.toLocaleString()} chips!)`;
+          }
+        }
+      });
+      renderQuests();
+    }
+
+    function openSettings() {
+      document.getElementById('settings-modal').classList.add('show');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.remove('show');
+    }
+
+    function updateSetting(key, value) {
+      if (key === 'theme') {
+        document.body.classList.toggle('light', value === 'light');
+      }
+    }
+
+    function updateSize(value) {
+      document.documentElement.style.setProperty('--choice-size', value + 'px');
+      document.documentElement.style.setProperty('--choice-font', (value * 0.03) + 'rem');
+      document.getElementById('size-val').textContent = value;
+    }
+
+    function updateAccent(value) {
+      document.documentElement.style.setProperty('--accent', value);
+    }
+
+    function updateFont(value) {
+      const sizes = { small: '0.9rem', medium: '1rem', large: '1.2rem', xlarge: '1.5rem' };
+      document.querySelectorAll('.choice').forEach(c => c.style.fontSize = sizes[value]);
+    }
+
+    function updateAnim(value) {
+      const anims = {
+        normal: 'all 0.2s',
+        bounce: 'transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        pulse: 'transform 0.15s',
+        none: 'none'
+      };
+      document.querySelectorAll('.choice').forEach(c => c.style.transition = anims[value]);
+    }
+
+    function updateHistory(value) {
+      document.getElementById('history').style.display = value === 'show' ? 'block' : 'none';
+    }
+
+    function toggleSetting(key, value) {
+      if (key === 'taunts') document.getElementById('taunt').style.display = value === 'show' ? 'block' : 'none';
+      if (key === 'quests') document.getElementById('quest-panel').style.display = value === 'show' ? 'block' : 'none';
+    }
+
+    function toggleQuestPanel(value) { document.getElementById('quest-panel').style.display = value === 'show' ? 'block' : 'none'; }
+    function toggleLucky(value) { document.querySelector('.lucky-btn').style.display = value === 'show' ? 'inline-block' : 'none'; }
+    function toggleTimer(value) { document.getElementById('timer-display').style.display = value === 'show' ? 'block' : 'none'; }
+    function toggleStreak(value) { document.getElementById('result').style.display = value === 'show' ? 'block' : 'none'; }
+    function togglePattern(value) { document.getElementById('pattern').style.display = value === 'show' ? 'block' : 'none'; }
+    function toggleBotBal(value) { document.querySelector('.bot-chips').style.display = value === 'show' ? 'block' : 'none'; }
+    function toggleAILogic(value) { }
+    function toggleCompact(value) { document.body.classList.toggle('compact', value === 'on'); }
+    function toggleBetSize(value) { document.querySelector('.bet-input').style.width = value === 'large' ? '150px' : '100px'; }
+    function toggleSpacing(value) { const gaps = { normal: '1.5rem', tight: '0.5rem', wide: '3rem' }; document.querySelector('.choices').style.gap = gaps[value]; }
+    function toggleScore(value) { document.querySelector('.score-board').style.display = value === 'show' ? 'flex' : 'none'; }
+    function toggleChatFont(value) { const sizes = { small: '0.7rem', medium: '0.8rem', large: '1rem' }; document.querySelectorAll('.chat-msg').forEach(m => m.style.fontSize = sizes[value]); }
+    function toggleAnimSpeed(value) { const speeds = { slow: '0.4s', normal: '0.2s', fast: '0.1s' }; document.querySelectorAll('.choice').forEach(c => c.style.transitionDuration = speeds[value]); }
+    function toggleShape(value) { const radius = { circle: '50%', square: '0%', rounded: '15px' }; document.querySelectorAll('.choice').forEach(c => c.style.borderRadius = radius[value]); }
+    function toggleGradient(value) { const grads = { normal: '135deg', intense: '90deg', subtle: '180deg', flat: '0deg' }; document.body.style.setProperty('--grad-angle', grads[value]); }
+    function toggleWheel(value) { }
+    function toggleDiffBadge(value) { document.querySelectorAll('.diff-btn').forEach(b => b.style.display = value === 'show' ? 'inline-block' : 'none'); }
+    function toggleColorScheme(value) { const colors = { blue: '#00d4ff', purple: '#9b59b6', green: '#2ecc71', red: '#e74c3c' }; document.documentElement.style.setProperty('--accent', colors[value]); }
+    function toggleSpam(value) { }
+
+    function toggleLoot() { document.getElementById('loot-panel').classList.toggle('show'); }
+    function toggleUnlockables() { document.getElementById('unlockables-panel').classList.toggle('show'); }
+    function toggleLockedCheats() { document.getElementById('locked-cheats').classList.toggle('show'); }
+    function updateLockedCheats() {
+      const lockedItems = document.querySelectorAll('#locked-cheats .unlock-item');
+      lockedItems.forEach(item => {
+        item.classList.remove('locked');
+        item.querySelector('.condition').textContent = 'UNLOCKED! Use in chat';
+        item.querySelector('.condition').style.color = '#00ff00';
+      });
+    }
+    function updateKeybindHints() {
+      document.getElementById('keybind-rock').textContent = keybinds.rock.toUpperCase();
+      document.getElementById('keybind-paper').textContent = keybinds.paper.toUpperCase();
+      document.getElementById('keybind-scissors').textContent = keybinds.scissors.toUpperCase();
+    }
+    function saveGame() {
+      const saveData = {
+        chips, botChips, playerScore, cpuScore, difficulty, 
+        winStreak, loseStreak, gameCount, achievementUnlocked, 
+        extremeAchievementUnlocked, allDifficultiesBeaten,
+        beatenDifficulties: Array.from(beatenDifficulties),
+        inventory, completedQuests: Array.from(completedQuests)
+      };
+      localStorage.setItem('rps_save', JSON.stringify(saveData));
+      addChatMsg('💾 Game saved!', 'success');
+    }
+    function exportSave() {
+      const saveData = {
+        chips, botChips, playerScore, cpuScore, difficulty, 
+        winStreak, loseStreak, gameCount, achievementUnlocked, 
+        extremeAchievementUnlocked, allDifficultiesBeaten,
+        beatenDifficulties: Array.from(beatenDifficulties),
+        inventory, completedQuests: Array.from(completedQuests)
+      };
+      const blob = new Blob([JSON.stringify(saveData)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rps_save.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      addChatMsg('📤 Save exported!', 'success');
+    }
+    function importSave() {
+      document.getElementById('import-file').click();
+    }
+    function loadFromFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const saveData = JSON.parse(event.target.result);
+          loadGameData(saveData);
+          addChatMsg('📥 Save imported!', 'success');
+        } catch(err) {
+          addChatMsg('❌ Invalid save file!', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+    function loadGameData(data) {
+      chips = data.chips || 2000;
+      botChips = data.botChips || 2500000;
+      playerScore = data.playerScore || 0;
+      cpuScore = data.cpuScore || 0;
+      difficulty = data.difficulty || 'easy';
+      winStreak = data.winStreak || 0;
+      loseStreak = data.loseStreak || 0;
+      gameCount = data.gameCount || 0;
+      achievementUnlocked = data.achievementUnlocked || false;
+      extremeAchievementUnlocked = data.extremeAchievementUnlocked || false;
+      allDifficultiesBeaten = data.allDifficultiesBeaten || false;
+      beatenDifficulties = new Set(data.beatenDifficulties || []);
+      inventory = data.inventory || {};
+      completedQuests = new Set(data.completedQuests || []);
+      document.getElementById('chips').textContent = chips.toLocaleString();
+      document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      document.getElementById('player-score').textContent = playerScore;
+      document.getElementById('cpu-score').textContent = cpuScore;
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-diff="${difficulty}"]`).classList.add('active');
+      renderInventory();
+      renderQuests();
+    }
+    let debugEnabled = false;
+    function toggleDebug() {
+      debugEnabled = !debugEnabled;
+      document.getElementById('debug-panel').classList.toggle('show');
+      if (debugEnabled) startDebugLoop();
+      else stopDebugLoop();
+    }
+    let debugInterval = null;
+    function startDebugLoop() {
+      updateDebugStats();
+      debugInterval = setInterval(updateDebugStats, 1000);
+    }
+    function stopDebugLoop() {
+      if (debugInterval) clearInterval(debugInterval);
+    }
+    function updateDebugStats() {
+      document.getElementById('debug-fps').textContent = Math.floor(Math.random() * 30 + 60);
+      if (performance.memory) {
+        document.getElementById('debug-mem').textContent = Math.floor(performance.memory.usedJSHeapSize / 1048576) + ' MB';
+      }
+      document.getElementById('debug-games').textContent = gameCount;
+      document.getElementById('debug-wins').textContent = playerScore;
+      document.getElementById('debug-losses').textContent = cpuScore;
+      document.getElementById('debug-streak').textContent = winStreak;
+      document.getElementById('debug-bot').textContent = botChips.toLocaleString();
+      document.getElementById('debug-player').textContent = chips.toLocaleString();
+    }
+    let dragDebug = { el: null, offX: 0, offY: 0 };
+    document.getElementById('debug-drag').addEventListener('mousedown', (e) => {
+      dragDebug.el = document.getElementById('debug-panel');
+      dragDebug.offX = e.clientX - dragDebug.el.offsetLeft;
+      dragDebug.offY = e.clientY - dragDebug.el.offsetTop;
+      document.addEventListener('mousemove', moveDebug);
+      document.addEventListener('mouseup', () => document.removeEventListener('mousemove', moveDebug));
+    });
+    function moveDebug(e) {
+      if (dragDebug.el) {
+        dragDebug.el.style.left = (e.clientX - dragDebug.offX) + 'px';
+        dragDebug.el.style.top = (e.clientY - dragDebug.offY) + 'px';
+      }
+    }
+
+    function selectCrate(tier) {
+      selectedCrate = tier;
+      document.querySelectorAll('.crate-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelector(`.crate-btn.${tier}`).classList.add('selected');
+      document.getElementById('crate-price').textContent = `Cost: ${cratePrices[tier].toLocaleString()} chips`;
+    }
+
+    function openCrate() {
+      const cost = cratePrices[selectedCrate];
+      if (chips < cost) { addChatMsg('Not enough chips!', 'error'); return; }
+      chips -= cost;
+      document.getElementById('chips').textContent = chips.toLocaleString();
+      
+      const table = lootTable[selectedCrate];
+      let item = null;
+      
+      const rareItem = table.find(i => i.rare);
+      if (rareItem) {
+        const luckyRoll = getCryptoRandom() % 1000000000000;
+        let rareChance = 0;
+        if (selectedCrate === 'mythic') {
+          rareChance = 1;
+        } else if (selectedCrate === 'legendary') {
+          rareChance = 1;
+        }
+        if (luckyRoll < rareChance) { item = rareItem; }
+      }
+      
+      if (!item) {
+        const roll = getCryptoRandom() % 1000000;
+        let cumulative = 0;
+        for (const loot of table) {
+          if (!loot.rare) {
+            cumulative += Math.floor(loot.chance * 1000000);
+            if (roll < cumulative) { item = loot; break; }
+          }
+        }
+      }
+      if (!item) item = table[table.length - 1];
+      
+      inventory[item.name] = (inventory[item.name] || 0) + 1;
+      
+      const resultDiv = document.getElementById('crate-result');
+      resultDiv.style.display = 'block';
+      
+      const rarityColors = {
+        common: 'linear-gradient(135deg, #8b8b8b, #666)',
+        uncommon: 'linear-gradient(135deg, #2ecc71, #27ae60)',
+        rare: 'linear-gradient(135deg, #3498db, #2980b9)',
+        epic: 'linear-gradient(135deg, #9b59b6, #8e44ad)',
+        legendary: 'linear-gradient(135deg, #f39c12, #e67e22)',
+        mythic: 'linear-gradient(135deg, #e74c3c, #c0392b)'
+      };
+      
+      resultDiv.style.background = rarityColors[item.rarity] || 'rgba(255,255,255,0.1)';
+      
+      let rarityBadge = '';
+      if (item.rare) {
+        rarityBadge = '<div style="color:#ffd700;font-weight:bold;">💎 LEGENDARY RARE! 💎</div>';
+      } else if (item.rarity) {
+        rarityBadge = `<div style="text-transform:uppercase;font-size:0.8rem;">${item.rarity}</div>`;
+      }
+      
+      resultDiv.innerHTML = `<div style="font-size:2rem;">${item.emoji}</div><div>${item.name}</div>${rarityBadge}<div style="color:#ffd700;font-weight:bold;margin-top:5px;">${item.value.toLocaleString()} chips</div>`;
+      
+      renderInventory();
+      checkQuests();
+    }
+
+    function renderInventory() {
+      const grid = document.getElementById('inventory');
+      grid.innerHTML = '';
+      for (const [name, count] of Object.entries(inventory)) {
+        const item = Object.values(lootTable).flat().find(i => i.name === name);
+        if (item && count > 0) {
+          grid.innerHTML += `<div class="inv-item">${item.emoji}<div>${name}</div><div class="count">${count}</div><div style="color:#ffd700;font-size:0.7rem;">${item.value.toLocaleString()}</div></div>`;
+        }
+      }
+    }
+
+    function sellAll() {
+      let total = 0;
+      for (const [name, count] of Object.entries(inventory)) {
+        const item = Object.values(lootTable).flat().find(i => i.name === name);
+        if (item && count > 0) {
+          total += item.value * count;
+          inventory[name] = 0;
+        }
+      }
+      if (total > 0) {
+        chips += total;
+        document.getElementById('chips').textContent = chips.toLocaleString();
+        addChatMsg(`Sold all items for ${total.toLocaleString()} chips!`, 'success');
+        renderInventory();
+        checkQuests();
+      }
+    }
+
+    function activateTrueDestruction() {
+      trueDestruction = true;
+      difficulty = 'extreme';
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-diff="extreme"]').classList.add('active');
+      botChips = botStartingChips.extreme;
+      document.getElementById('bot-chips').textContent = botChips.toLocaleString();
+      document.getElementById('destruction-message').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('destruction-message').style.display = 'none';
+      }, 5000);
+      addChatMsg('⚛️ TRUE DESTRUCTION ACTIVATED!', 'error');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.add-chips')) {
+        document.getElementById('add-chips-dropdown').classList.remove('show');
+      }
+    });
+
+    document.getElementById('cheat-always-win').addEventListener('change', (e) => cheats.alwaysWin = e.target.checked);
+    document.getElementById('cheat-4x-rewards').addEventListener('change', (e) => cheats.fourXRewards = e.target.checked);
+    document.getElementById('cheat-future-vision').addEventListener('change', (e) => cheats.futureVision = e.target.checked);
+    document.getElementById('cheat-infinite-chips').addEventListener('change', (e) => cheats.infiniteChips = e.target.checked);
+    document.getElementById('cheat-no-bet').addEventListener('change', (e) => cheats.noBet = e.target.checked);
+    document.getElementById('cheat-show-logic').addEventListener('change', (e) => cheats.showLogic = e.target.checked);
+    document.getElementById('cheat-instant-streak').addEventListener('change', (e) => cheats.instantStreak = e.target.checked);
+    document.getElementById('cheat-kill-ai').addEventListener('change', (e) => cheats.killAI = e.target.checked);
+
+    let secret777Buffer = '';
+    let activeKeys = {};
+
+    document.addEventListener('keydown', (e) => {
+      const chatOpen = document.getElementById('chat-container').classList.contains('show');
+      const key = e.key.toLowerCase();
+      
+      activeKeys[key] = true;
+      
+      if (e.key.toLowerCase() === 'c' && !chatOpen && extremeAchievementUnlocked) {
+        document.getElementById('cheat-menu').classList.toggle('show');
+      }
+      if (e.key === '/' && wheelUnlocked && !wheelSpun) {
+        e.preventDefault();
+        document.getElementById('wheel-menu').classList.add('show');
+        spinWheel();
+      }
+      if (e.key.toLowerCase() === 'q') {
+        e.preventDefault();
+        document.getElementById('chat-container').classList.toggle('show');
+        if (document.getElementById('chat-container').classList.contains('show')) {
+          document.getElementById('chat-input').focus();
+        }
+      }
+      if (e.key === '`' && document.getElementById('chat-container').classList.contains('show')) {
+        e.preventDefault();
+        openHelp();
+      }
+      if (allDifficultiesBeaten) {
+        if (e.key === '7') {
+          secret777Buffer += '7';
+          check777();
+        } else if (e.key !== '7') {
+          secret777Buffer = '';
+        }
+      }
+      if (!chatOpen && spamEnabled && Object.values(keybinds).includes(key)) {
+        if (e.repeat) {
+          if (!autoPlayKey) {
+            startAutoPlay(key);
+          }
+        } else {
+          play(key === keybinds.rock ? 'rock' : key === keybinds.paper ? 'paper' : 'scissors');
+        }
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      activeKeys[e.key.toLowerCase()] = false;
+      if (autoPlayKey && e.key.toLowerCase() === autoPlayKey) {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = null;
+        autoPlayKey = null;
+      }
+    });
+
+    let autoPlayInterval = null;
+    let autoPlayKey = null;
+    let spamEnabled = false;
+    let spamInterval = null;
+
+    function startAutoPlay(key) {
+      autoPlayKey = key;
+      autoPlayInterval = setInterval(() => {
+        if (key === keybinds.rock) play('rock');
+        else if (key === keybinds.paper) play('paper');
+        else if (key === keybinds.scissors) play('scissors');
+      }, 1);
+    }
+
+    function toggleSpam(value) {
+      spamEnabled = value === 'on';
+      if (spamEnabled) {
+        keybinds = { rock: 'a', paper: 's', scissors: 'd' };
+        document.getElementById('keybind-rock').textContent = 'A';
+        document.getElementById('keybind-paper').textContent = 'S';
+        document.getElementById('keybind-scissors').textContent = 'D';
+      } else {
+        keybinds = { rock: '', paper: '', scissors: '' };
+        document.getElementById('keybind-rock').textContent = '';
+        document.getElementById('keybind-paper').textContent = '';
+        document.getElementById('keybind-scissors').textContent = '';
+        if (autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+          autoPlayKey = null;
+        }
+      }
+    }
+
+    function check777() {
+      if (secret777Buffer === '777') {
+        secret777Buffer = '';
+        showAddChipsButton();
+      }
+    }
+
+    function showAddChipsButton() {
+      const container = document.getElementById('add-chips-container');
+      container.style.display = 'block';
+      addChatMsg('🎁 Cheat activated! + Add chips available!', 'success');
+      setTimeout(() => {
+        container.style.display = 'none';
+      }, 2000);
+    }
+
+    renderQuests();
+    selectCrate('common');
+    const savedGame = localStorage.getItem('rps_save');
+    if (savedGame) {
+      try {
+        loadGameData(JSON.parse(savedGame));
+        addChatMsg('💾 Save loaded!', 'success');
+      } catch(e) {}
+    }
+  </script>
+
+
+</body></html>
